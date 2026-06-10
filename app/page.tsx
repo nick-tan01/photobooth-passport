@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Booth, StripRecord, View } from "@/lib/types";
+import type { FinishId } from "@/lib/filters";
 import { compositeStrip, ensureFonts } from "@/lib/composite";
 import { nextSerial, saveStrip } from "@/lib/storage";
 import { isMuted, setMuted } from "@/lib/audio";
@@ -37,6 +38,7 @@ export default function Home() {
   const [serial, setSerial] = useState("");
   const [wantPrompts, setWantPrompts] = useState(true);
   const [soundOn, setSoundOn] = useState(true);
+  const [finish, setFinish] = useState<FinishId>("gloss");
   const [photos, setPhotos] = useState<string[]>([]);
   const [retakeUsed, setRetakeUsed] = useState(false);
   const [caption, setCaption] = useState("");
@@ -156,6 +158,8 @@ export default function Home() {
             setWantPrompts={setWantPrompts}
             soundOn={soundOn}
             setSoundOn={setSound}
+            finish={finish}
+            setFinish={setFinish}
             onBegin={beginSitting}
             onBack={() => setView("directory")}
           />
@@ -166,6 +170,7 @@ export default function Home() {
             booth={booth}
             wantPrompts={wantPrompts}
             amendment={retakeUsed}
+            finish={finish}
             onComplete={onCaptured}
             onAbort={() => setView("intro")}
           />

@@ -10,6 +10,7 @@ import {
   captureFrame,
   captureTestFrame,
 } from "@/lib/camera";
+import { getFinish, type FinishId } from "@/lib/filters";
 import { ensureFonts } from "@/lib/composite";
 import { playThunk, playShutter, buzz } from "@/lib/audio";
 
@@ -19,6 +20,7 @@ interface Props {
   booth: Booth;
   wantPrompts: boolean;
   amendment: boolean;
+  finish: FinishId;
   onComplete: (photos: string[]) => void;
   onAbort: () => void;
 }
@@ -29,6 +31,7 @@ export default function CaptureBooth({
   booth,
   wantPrompts,
   amendment,
+  finish,
   onComplete,
   onAbort,
 }: Props) {
@@ -73,8 +76,8 @@ export default function CaptureBooth({
         if (!aliveRef.current) return;
         const shot =
           useDemo || !videoRef.current
-            ? captureTestFrame(i, booth.accent)
-            : captureFrame(videoRef.current);
+            ? captureTestFrame(i, booth.accent, finish)
+            : captureFrame(videoRef.current, finish);
         shots.push(shot);
         setThumbs([...shots]);
         setFlash(true);
@@ -92,7 +95,7 @@ export default function CaptureBooth({
       await sleep(600);
       if (aliveRef.current) onComplete(shots);
     },
-    [booth, wantPrompts, promptOffset, onComplete],
+    [booth, wantPrompts, promptOffset, finish, onComplete],
   );
 
   useEffect(() => {
@@ -127,8 +130,8 @@ export default function CaptureBooth({
   }, []);
 
   const demoCard = useMemo(
-    () => (demo ? captureTestFrame(exposure, booth.accent, 480) : null),
-    [demo, exposure, booth],
+    () => (demo ? captureTestFrame(exposure, booth.accent, finish, 480) : null),
+    [demo, exposure, booth, finish],
   );
 
   return (
@@ -189,7 +192,10 @@ export default function CaptureBooth({
               muted
               autoPlay
               className="absolute inset-0 h-full w-full -scale-x-100 object-cover"
-              style={{ display: demo ? "none" : undefined }}
+              style={{
+                display: demo ? "none" : undefined,
+                filter: getFinish(finish).css,
+              }}
             />
             {demo && demoCard && (
               <img

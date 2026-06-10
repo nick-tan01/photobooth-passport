@@ -1,6 +1,7 @@
 "use client";
 
 import type { Booth } from "@/lib/types";
+import { FINISHES, type FinishId } from "@/lib/filters";
 import { BoothStamp } from "./Stamp";
 import { FormCheck, PlateButton, TypeLink } from "./Controls";
 import PaperTexture from "./PaperTexture";
@@ -13,6 +14,8 @@ interface Props {
   setWantPrompts: (v: boolean) => void;
   soundOn: boolean;
   setSoundOn: (v: boolean) => void;
+  finish: FinishId;
+  setFinish: (f: FinishId) => void;
   onBegin: () => void;
   onBack: () => void;
 }
@@ -31,6 +34,8 @@ export default function SessionIntro({
   setWantPrompts,
   soundOn,
   setSoundOn,
+  finish,
+  setFinish,
   onBegin,
   onBack,
 }: Props) {
@@ -93,6 +98,50 @@ export default function SessionIntro({
             </li>
           ))}
         </ol>
+
+        <p className="mt-5 font-geo text-[9px] font-semibold tracking-[0.26em] text-gold">
+          FINISH — CHOOSE ONE
+        </p>
+        <div
+          className="mt-2 grid grid-cols-2 gap-2"
+          role="radiogroup"
+          aria-label="Print finish"
+        >
+          {FINISHES.map((f) => {
+            const active = finish === f.id;
+            return (
+              <button
+                key={f.id}
+                onClick={() => setFinish(f.id)}
+                role="radio"
+                aria-checked={active}
+                className={`press flex items-center gap-2.5 px-2.5 py-2 text-left ${
+                  active
+                    ? "border-[1.5px] border-navy bg-navy/[0.06]"
+                    : "border border-ink/30"
+                }`}
+              >
+                <span
+                  aria-hidden
+                  className="h-6 w-6 shrink-0 rounded-full border border-ink/25"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 35% 30%, #E8C49A 0%, #C98E6B 38%, #8A5E48 62%, #1F3A5F 100%)",
+                    filter: f.css,
+                  }}
+                />
+                <span className="min-w-0">
+                  <span className="block font-geo text-[11px] font-semibold tracking-[0.1em] text-ink">
+                    {f.name}
+                  </span>
+                  <span className="block font-geo text-[8.5px] leading-tight text-faded">
+                    {f.blurb}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
         <div className="mt-5 space-y-3 border-t border-dashed border-ink/40 pt-4">
           <FormCheck

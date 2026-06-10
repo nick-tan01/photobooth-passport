@@ -167,12 +167,8 @@ export async function compositeStrip(input: StripInput): Promise<Blob> {
     ctx.rotate(rot);
     const half = PHOTO / 2;
     if (imgs[i]) ctx.drawImage(imgs[i], -half, -half, PHOTO, PHOTO);
-    ctx.globalCompositeOperation = "multiply";
-    ctx.fillStyle = "rgba(94,42,43,0.10)";
-    ctx.fillRect(-half, -half, PHOTO, PHOTO);
-    ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = "rgba(244,237,222,0.07)";
-    ctx.fillRect(-half, -half, PHOTO, PHOTO);
+    // photo toning now lives in the capture-time finish (lib/filters.ts);
+    // the compositor only adds print character: vignette + frame
     const g = ctx.createRadialGradient(0, 0, PHOTO * 0.32, 0, 0, PHOTO * 0.74);
     g.addColorStop(0, "rgba(34,38,43,0)");
     g.addColorStop(1, "rgba(34,38,43,0.20)");
