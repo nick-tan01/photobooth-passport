@@ -1,101 +1,211 @@
-import Image from "next/image";
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Booth, StripRecord, View } from "@/lib/types";
+import { compositeStrip, ensureFonts } from "@/lib/composite";
+import { nextSerial, saveStrip } from "@/lib/storage";
+import { isMuted, setMuted } from "@/lib/audio";
+import Cover from "@/components/Cover";
+import BoothDirectory from "@/components/BoothDirectory";
+import SessionIntro from "@/components/SessionIntro";
+import CaptureBooth from "@/components/CaptureBooth";
+import StripReveal from "@/components/StripReveal";
+import CustomizeStrip from "@/components/CustomizeStrip";
+import Admitted from "@/components/Admitted";
+import Passport from "@/components/Passport";
+
+const MONTHS = [
+  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+];
+
+function formatToday(): string {
+  const d = new Date();
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function uuid(): string {
+  return typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [view, setView] = useState<View>("cover");
+  const [booth, setBooth] = useState<Booth | null>(null);
+  const [serial, setSerial] = useState("");
+  const [wantPrompts, setWantPrompts] = useState(true);
+  const [soundOn, setSoundOn] = useState(true);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [retakeUsed, setRetakeUsed] = useState(false);
+  const [caption, setCaption] = useState("");
+  const [dateText, setDateText] = useState("");
+  const [stripUrl, setStripUrl] = useState<string | null>(null);
+  const stripBlob = useRef<Blob | null>(null);
+  const compositeSeq = useRef(0);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+  useEffect(() => {
+    setSoundOn(!isMuted());
+    ensureFonts();
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (stripUrl) URL.revokeObjectURL(stripUrl);
+    },
+    [stripUrl],
+  );
+
+  const recompose = useCallback(
+    async (cap: string, date: string, ph: string[], b: Booth, ser: string) => {
+      const seq = ++compositeSeq.current;
+      try {
+        const blob = await compositeStrip({
+          photos: ph,
+          booth: b,
+          caption: cap,
+          dateText: date,
+          serial: ser,
+        });
+        if (seq !== compositeSeq.current) return;
+        stripBlob.current = blob;
+        setStripUrl(URL.createObjectURL(blob));
+      } catch {
+        // leave the previous strip in place
+      }
+    },
+    [],
+  );
+
+  function selectBooth(b: Booth) {
+    setBooth(b);
+    setSerial(nextSerial(b.prefix));
+    setRetakeUsed(false);
+    setCaption("");
+    setDateText(formatToday());
+    setPhotos([]);
+    stripBlob.current = null;
+    setStripUrl(null);
+    setView("intro");
+  }
+
+  function beginSitting() {
+    setPhotos([]);
+    setStripUrl(null);
+    setView("capture");
+  }
+
+  function onCaptured(shots: string[]) {
+    setPhotos(shots);
+    setStripUrl(null);
+    setView("reveal");
+    if (booth) recompose(caption, dateText, shots, booth, serial);
+  }
+
+  function amend() {
+    setRetakeUsed(true);
+    setPhotos([]);
+    setStripUrl(null);
+    setView("capture");
+  }
+
+  async function affix() {
+    if (!booth || !stripBlob.current) return;
+    const rec: StripRecord = {
+      id: uuid(),
+      boothId: booth.id,
+      image: stripBlob.current,
+      caption,
+      dateText,
+      serial,
+      createdAt: Date.now(),
+    };
+    try {
+      await saveStrip(rec);
+    } catch {
+      // storage may be unavailable (private browsing); still show the stamp
+    }
+    setView("admitted");
+  }
+
+  function setSound(v: boolean) {
+    setSoundOn(v);
+    setMuted(!v);
+  }
+
+  return (
+    <main className="relative mx-auto min-h-dvh w-full max-w-app overflow-x-hidden bg-manila shadow-[0_0_60px_rgba(0,0,0,0.55)]">
+      <div key={view} className="screen-in">
+        {view === "cover" && <Cover onOpen={() => setView("directory")} />}
+
+        {view === "directory" && (
+          <BoothDirectory
+            onSelect={selectBooth}
+            onPassport={() => setView("passport")}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+        )}
+
+        {view === "intro" && booth && (
+          <SessionIntro
+            booth={booth}
+            serial={serial}
+            dateText={dateText}
+            wantPrompts={wantPrompts}
+            setWantPrompts={setWantPrompts}
+            soundOn={soundOn}
+            setSoundOn={setSound}
+            onBegin={beginSitting}
+            onBack={() => setView("directory")}
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
+        )}
+
+        {view === "capture" && booth && (
+          <CaptureBooth
+            booth={booth}
+            wantPrompts={wantPrompts}
+            amendment={retakeUsed}
+            onComplete={onCaptured}
+            onAbort={() => setView("intro")}
           />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        )}
+
+        {view === "reveal" && (
+          <StripReveal
+            stripUrl={stripUrl}
+            retakeUsed={retakeUsed}
+            onAmend={amend}
+            onProceed={() => setView("customize")}
+          />
+        )}
+
+        {view === "customize" && booth && (
+          <CustomizeStrip
+            stripUrl={stripUrl}
+            caption={caption}
+            dateText={dateText}
+            onCaption={setCaption}
+            onDate={setDateText}
+            recompose={(c, d) => recompose(c, d, photos, booth, serial)}
+            onAffix={affix}
+          />
+        )}
+
+        {view === "admitted" && booth && (
+          <Admitted
+            booth={booth}
+            serial={serial}
+            dateText={dateText}
+            stripUrl={stripUrl}
+            getBlob={() => stripBlob.current}
+            onPassport={() => setView("passport")}
+            onDirectory={() => setView("directory")}
+          />
+        )}
+
+        {view === "passport" && (
+          <Passport onDirectory={() => setView("directory")} />
+        )}
+      </div>
+    </main>
   );
 }

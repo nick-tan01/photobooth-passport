@@ -3,25 +3,208 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light only;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #14110e;
+  color: #29251f;
+  -webkit-tap-highlight-color: transparent;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+::selection {
+  background: #a33b2e;
+  color: #f4edde;
+}
+
+button,
+a,
+input {
+  touch-action: manipulation;
+}
+
+/* ---- screen transition ---- */
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.screen-in {
+  animation: screen-in 280ms ease-out both;
+}
+
+/* ---- stamp slam (countdown numerals, ADMITTED stamp) ---- */
+@keyframes thunk-in {
+  0% {
+    opacity: 0;
+    transform: scale(2.3) rotate(var(--thunk-rot, -5deg));
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.95) rotate(var(--thunk-rot, -5deg));
+  }
+  75% {
+    transform: scale(1.04) rotate(var(--thunk-rot, -5deg));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(var(--thunk-rot, -5deg));
+  }
+}
+.thunk-in {
+  animation: thunk-in 300ms cubic-bezier(0.2, 1.4, 0.3, 1) both;
+}
+
+/* ---- camera flash ---- */
+@keyframes flash-out {
+  0% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.flash-out {
+  animation: flash-out 420ms ease-out both;
+}
+
+/* ---- strip printing out of the slot, with motor judder ---- */
+@keyframes print-down {
+  0% {
+    transform: translateY(-103%);
+  }
+  9% {
+    transform: translateY(-90%);
+  }
+  13% {
+    transform: translateY(-91.2%);
+  }
+  24% {
+    transform: translateY(-75%);
+  }
+  28% {
+    transform: translateY(-76.2%);
+  }
+  40% {
+    transform: translateY(-58%);
+  }
+  44% {
+    transform: translateY(-59%);
+  }
+  57% {
+    transform: translateY(-40%);
+  }
+  61% {
+    transform: translateY(-41%);
+  }
+  74% {
+    transform: translateY(-21%);
+  }
+  78% {
+    transform: translateY(-22.2%);
+  }
+  91% {
+    transform: translateY(-4%);
+  }
+  95% {
+    transform: translateY(-5%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+.print-down {
+  animation: print-down 3.4s cubic-bezier(0.3, 0.4, 0.4, 1) both;
+}
+
+/* ---- waiting text ---- */
+@keyframes soft-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.soft-blink {
+  animation: soft-blink 1.6s ease-in-out infinite;
+}
+
+/* ---- pose-prompt slip drop ---- */
+@keyframes slip-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) rotate(var(--slip-rot, -1.5deg));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(var(--slip-rot, -1.5deg));
+  }
+}
+.slip-drop {
+  animation: slip-drop 260ms ease-out both;
+}
+
+/* ---- generic fade-in for action rows ---- */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise-in {
+  animation: rise-in 360ms ease-out both;
+}
+
+/* ---- physical button press ---- */
+.press {
+  transition: transform 90ms ease, box-shadow 90ms ease;
+}
+.press:active {
+  transform: translateY(1.5px);
+}
+
+/* ---- ticket perforation (page colour punches through) ---- */
+.perf-y {
+  background-image: radial-gradient(
+    circle,
+    var(--perf, #ede3cc) 2.1px,
+    transparent 2.5px
+  );
+  background-size: 100% 13px;
+  background-position: center top;
+  background-repeat: repeat-y;
+}
+
+/* ---- typed form field ---- */
+.typed-field {
+  font-size: 17px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1.5px solid rgba(41, 37, 31, 0.5);
+  border-radius: 0;
+  outline: none;
+  color: #2f4670;
+}
+.typed-field:focus {
+  border-bottom-color: #a33b2e;
+}
+.typed-field::placeholder {
+  color: rgba(138, 126, 104, 0.75);
+  letter-spacing: 0.04em;
 }

@@ -1,0 +1,92 @@
+import type { Booth, BoothId } from "./types";
+
+export const BOOTHS: Booth[] = [
+  {
+    id: "standard",
+    name: "The Standard",
+    locale: "BUREAU HEAD OFFICE",
+    stampLocale: "HEAD OFFICE",
+    tagline: "The bureau's original apparatus. Honest light, plain dealing.",
+    prefix: "STD",
+    accent: "#2F4670",
+    paper: "#F4EDDE",
+    prompts: [
+      "SIT UP STRAIGHT, PLEASE",
+      "NOW — A REAL SMILE",
+      "LOOK AT YOUR COMPANION",
+      "EYES CLOSED, CHIN UP",
+      "A BIG LAUGH, GO",
+      "PROFILE, PLEASE",
+      "LEAN IN TOGETHER",
+      "SERIOUS, LIKE A PASSPORT",
+    ],
+  },
+  {
+    id: "midnight",
+    name: "Midnight Express",
+    locale: "SLEEPER CAR No. 9",
+    stampLocale: "SLEEPER CAR No. 9",
+    tagline: "Fitted to the night train. Last service 23:59.",
+    prefix: "MDX",
+    accent: "#1F2B45",
+    paper: "#F1EADA",
+    prompts: [
+      "PRETEND YOU'RE BEING FOLLOWED",
+      "WHISPER A SECRET",
+      "LOOK OUT THE WINDOW",
+      "TIP AN IMAGINARY HAT",
+      "SLEEPY EYES",
+      "TOAST WITH INVISIBLE GLASSES",
+      "GAZE AT SOMETHING FAR AWAY",
+      "CAUGHT MID-LAUGH",
+    ],
+  },
+  {
+    id: "seaside",
+    name: "Seaside Pier",
+    locale: "PIER PAVILION, BOARDWALK",
+    stampLocale: "PIER PAVILION",
+    tagline: "Salt air included at no extra charge.",
+    prefix: "SEA",
+    accent: "#3F6B5B",
+    paper: "#F5EFDF",
+    prompts: [
+      "SQUINT INTO THE SUN",
+      "HOLD AN INVISIBLE ICE CREAM",
+      "WINDSWEPT HAIR — SELL IT",
+      "SAILOR'S SALUTE",
+      "A SEAGULL TOOK YOUR CHIPS",
+      "POSTCARD SMILE",
+      "LOOK OUT FOR LAND",
+      "BEST CANNONBALL FACE",
+    ],
+  },
+  {
+    id: "niagara",
+    name: "Niagara Falls",
+    locale: "TABLE ROCK, NIAGARA FALLS, ON",
+    stampLocale: "NIAGARA FALLS, ONT.",
+    tagline: "Issued only within sound of the falls.",
+    prefix: "NIA",
+    accent: "#37596E",
+    paper: "#F2EDDF",
+    exclusive: {
+      place: "NIAGARA FALLS, ON",
+      note: "Presence simulated for this demonstration.",
+    },
+    prompts: [
+      "HOLD ONTO YOUR HAT",
+      "POINT AT THE FALLS",
+      "YOU FORGOT THE PONCHO",
+      "HONEYMOON POSE",
+      "BRACE AGAINST THE MIST",
+      "AWE — REAL AWE",
+      "BARREL RIDER'S SALUTE",
+      "SHOUT OVER THE ROAR",
+    ],
+  },
+];
+
+export function getBooth(id: BoothId): Booth {
+  return BOOTHS.find((b) => b.id === id) ?? BOOTHS[0];
+}
