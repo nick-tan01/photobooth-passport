@@ -16,7 +16,7 @@ export function PlateButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`press block w-full bg-oxblood text-paper font-caslon font-bold tracking-[0.18em] text-[15px] uppercase py-4 px-6 border border-oxblood-deep shadow-plate disabled:opacity-40 ${className}`}
+      className={`press block w-full bg-navy text-paper font-display font-bold tracking-[0.18em] text-[15px] uppercase py-4 px-6 border border-navy-deep shadow-plate disabled:opacity-40 ${className}`}
     >
       {children}
     </button>
@@ -39,7 +39,7 @@ export function TypeLink({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`font-type text-[13px] tracking-wider underline underline-offset-4 decoration-[1.5px] decoration-faded text-ink-soft disabled:no-underline disabled:opacity-45 ${className}`}
+      className={`font-geo text-[13px] tracking-wider underline underline-offset-4 decoration-[1.5px] decoration-faded text-ink-soft disabled:no-underline disabled:opacity-45 ${className}`}
     >
       {children}
     </button>
@@ -74,7 +74,7 @@ export function FormCheck({
           >
             <path
               d="M 4 5 L 18 18 M 18 4 L 5 18"
-              stroke="#A33B2E"
+              stroke="#1F3A5F"
               strokeWidth="2.6"
               strokeLinecap="round"
               fill="none"
@@ -82,7 +82,7 @@ export function FormCheck({
           </svg>
         )}
       </span>
-      <span className="font-type">
+      <span className="font-geo">
         <span className="block text-[14px] tracking-wide text-ink">{label}</span>
         {sub && <span className="block text-[11.5px] text-faded">{sub}</span>}
       </span>

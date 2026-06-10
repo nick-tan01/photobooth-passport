@@ -12,14 +12,14 @@ body {
 }
 
 body {
-  background: #14110e;
-  color: #29251f;
+  background: #0e1420;
+  color: #22262b;
   -webkit-tap-highlight-color: transparent;
 }
 
 ::selection {
-  background: #a33b2e;
-  color: #f4edde;
+  background: #1f3a5f;
+  color: #f2ecdd;
 }
 
 button,
@@ -183,7 +183,7 @@ input {
 .perf-y {
   background-image: radial-gradient(
     circle,
-    var(--perf, #ede3cc) 2.1px,
+    var(--perf, #f2ecdd) 2.1px,
     transparent 2.5px
   );
   background-size: 100% 13px;
@@ -196,13 +196,13 @@ input {
   font-size: 17px;
   background: transparent;
   border: 0;
-  border-bottom: 1.5px solid rgba(41, 37, 31, 0.5);
+  border-bottom: 1.5px solid rgba(34, 38, 43, 0.45);
   border-radius: 0;
   outline: none;
-  color: #2f4670;
+  color: #1f3a5f;
 }
 .typed-field:focus {
-  border-bottom-color: #a33b2e;
+  border-bottom-color: #c9a86a;
 }
 .typed-field::placeholder {
   color: rgba(138, 126, 104, 0.75);

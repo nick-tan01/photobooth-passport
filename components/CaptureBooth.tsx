@@ -140,18 +140,18 @@ export default function CaptureBooth({
         preserveAspectRatio="none"
       >
         {Array.from({ length: 10 }).map((_, i) => (
-          <circle key={i} cx={19.5 + i * 39} cy="0" r="25" fill="#461E1F" />
+          <circle key={i} cx={19.5 + i * 39} cy="0" r="25" fill="#14243A" />
         ))}
       </svg>
 
       <div className="relative z-10 flex items-center justify-between pt-9">
         <button
           onClick={onAbort}
-          className="font-type text-[11px] tracking-[0.2em] text-paper/60"
+          className="font-geo text-[11px] tracking-[0.2em] text-paper/60"
         >
           ← ABANDON
         </button>
-        <span className="font-type text-[11px] tracking-[0.2em] text-paper/60">
+        <span className="font-geo text-[11px] tracking-[0.2em] text-paper/60">
           {amendment ? "AMENDMENT SITTING" : "SITTING IN PROGRESS"}
         </span>
       </div>
@@ -167,13 +167,13 @@ export default function CaptureBooth({
               } as React.CSSProperties
             }
           >
-            <span className="font-type text-[13px] tracking-[0.08em] text-ink">
+            <span className="font-geo text-[13px] tracking-[0.08em] text-ink">
               {prompt}
             </span>
           </div>
         )}
         {!prompt && phase === "running" && (
-          <span className="font-type text-[10.5px] tracking-[0.28em] text-paper/40">
+          <span className="font-geo text-[10.5px] tracking-[0.28em] text-paper/40">
             HOLD STILL BETWEEN FLASHES
           </span>
         )}
@@ -181,7 +181,7 @@ export default function CaptureBooth({
 
       <div className="relative z-10 flex flex-1 flex-col justify-center pb-4">
       <div className="relative mx-auto mt-2 w-full max-w-[330px]">
-        <div className="relative border-[10px] border-[#E8DFC9] bg-black shadow-strip">
+        <div className="relative border-[10px] border-[#EDE5D0] bg-black shadow-strip">
           <div className="relative aspect-square overflow-hidden">
             <video
               ref={videoRef}
@@ -201,7 +201,7 @@ export default function CaptureBooth({
 
             {phase === "warming" && (
               <div className="absolute inset-0 flex items-center justify-center bg-booth">
-                <span className="soft-blink font-type text-[12px] tracking-[0.3em] text-paper/70">
+                <span className="soft-blink font-geo text-[12px] tracking-[0.3em] text-paper/70">
                   WARMING THE APPARATUS…
                 </span>
               </div>
@@ -209,7 +209,7 @@ export default function CaptureBooth({
 
             {phase === "denied" && !demo && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-booth px-6 text-center">
-                <span className="font-type text-[12px] leading-relaxed tracking-wide text-paper/85">
+                <span className="font-geo text-[12px] leading-relaxed tracking-wide text-paper/85">
                   THE APPARATUS CANNOT REACH A CAMERA.
                 </span>
                 <button
@@ -217,11 +217,11 @@ export default function CaptureBooth({
                     setDemo(true);
                     runSequence(true);
                   }}
-                  className="press border border-paper/70 px-4 py-2 font-type text-[12px] tracking-[0.18em] text-paper"
+                  className="press border border-paper/70 px-4 py-2 font-geo text-[12px] tracking-[0.18em] text-paper"
                 >
                   PROCEED WITH TEST PATTERN →
                 </button>
-                <span className="font-type text-[10px] leading-relaxed text-paper/50">
+                <span className="font-geo text-[10px] leading-relaxed text-paper/50">
                   Allow camera access and re-enter the booth for real
                   exposures.
                 </span>
@@ -238,7 +238,7 @@ export default function CaptureBooth({
                   } as React.CSSProperties
                 }
               >
-                <span className="font-caslon text-[120px] font-bold text-paper [text-shadow:0_3px_0_rgba(0,0,0,0.45)]">
+                <span className="font-display text-[120px] font-bold text-paper [text-shadow:0_3px_0_rgba(0,0,0,0.45)]">
                   {count}
                 </span>
               </div>
@@ -248,8 +248,8 @@ export default function CaptureBooth({
           </div>
         </div>
 
-        <div className="mx-auto -mt-[2px] w-fit border border-[#8A6F33] bg-brass px-3 py-[3px] shadow-plate">
-          <span className="font-type text-[9.5px] tracking-[0.26em] text-oxblood-deep">
+        <div className="mx-auto -mt-[2px] w-fit border border-[#A8854B] bg-gold px-3 py-[3px] shadow-plate">
+          <span className="font-geo text-[9.5px] tracking-[0.26em] text-navy-deep">
             LOOK INTO THE GLASS · KEEP STILL
           </span>
         </div>
@@ -257,7 +257,7 @@ export default function CaptureBooth({
 
       <div className="relative mx-auto mt-8 flex flex-col items-center gap-3">
         <span
-          className={`font-type text-[12px] tracking-[0.3em] text-paper/80 ${phase === "done" ? "soft-blink" : ""}`}
+          className={`font-geo text-[12px] tracking-[0.3em] text-paper/80 ${phase === "done" ? "soft-blink" : ""}`}
         >
           {phase === "done"
             ? "DEVELOPING…"

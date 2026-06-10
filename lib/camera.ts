@@ -45,7 +45,7 @@ export function captureTestFrame(
   const cx = size / 2;
   const cy = size / 2;
 
-  ctx.fillStyle = "#E7DCC4";
+  ctx.fillStyle = "#EAE2CE";
   ctx.fillRect(0, 0, size, size);
 
   ctx.save();
@@ -60,7 +60,7 @@ export function captureTestFrame(
   ctx.fill();
   ctx.restore();
 
-  ctx.strokeStyle = "#3A342A";
+  ctx.strokeStyle = "#22324A";
   ctx.lineWidth = 3;
   for (const r of [0.36, 0.27]) {
     ctx.beginPath();
@@ -95,12 +95,12 @@ export function captureTestFrame(
   ctx.fillStyle = accent;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = `700 ${size * 0.26}px "Libre Caslon Text", Georgia, serif`;
+  ctx.font = `700 ${size * 0.26}px "Playfair Display", Georgia, serif`;
   ctx.fillText(String(index + 1), cx, cy + size * 0.01);
 
-  ctx.fillStyle = "#3A342A";
-  ctx.font = `${size * 0.034}px "Special Elite", "Courier New", monospace`;
-  ctx.fillText("BUREAU OF MEMORIES — TEST PATTERN", cx, size * 0.1);
+  ctx.fillStyle = "#22324A";
+  ctx.font = `500 ${size * 0.036}px Jost, "Avenir Next", sans-serif`;
+  ctx.fillText("THE GRAND TOUR CO. — TEST PATTERN", cx, size * 0.1);
   ctx.fillText(`EXPOSURE No. ${index + 1} OF 4 · NO CAMERA PRESENT`, cx, size * 0.91);
 
   return c.toDataURL("image/jpeg", 0.9);

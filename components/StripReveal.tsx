@@ -33,9 +33,9 @@ export default function StripReveal({
   }, [stripUrl]);
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-manila px-5 pb-8 pt-7">
-      <p className="relative z-10 text-center font-type text-[10px] tracking-[0.26em] text-faded">
-        BUREAU OF MEMORIES · DELIVERY
+    <div className="relative flex min-h-dvh flex-col bg-cream px-5 pb-8 pt-7">
+      <p className="relative z-10 text-center font-geo text-[10px] tracking-[0.26em] text-faded">
+        THE GRAND TOUR COMPANY · DELIVERY
       </p>
 
       {/* the slot */}
@@ -46,7 +46,7 @@ export default function StripReveal({
             <span className="block h-[6px] w-[180px] bg-black" />
             <span className="h-[7px] w-[7px] rounded-full bg-paper/30" />
           </div>
-          <p className="mt-[6px] text-center font-type text-[8.5px] tracking-[0.24em] text-paper/45">
+          <p className="mt-[6px] text-center font-geo text-[8.5px] tracking-[0.24em] text-paper/45">
             DO NOT REACH INTO THE SLOT
           </p>
         </div>
@@ -67,7 +67,7 @@ export default function StripReveal({
             className="flex w-[130px] items-center justify-center"
             style={{ height: "min(56dvh, 500px)" }}
           >
-            <span className="soft-blink font-type text-[11px] tracking-[0.25em] text-faded">
+            <span className="soft-blink font-geo text-[11px] tracking-[0.25em] text-faded">
               DEVELOPING…
             </span>
           </div>
@@ -79,7 +79,7 @@ export default function StripReveal({
           <PlateButton onClick={onProceed}>Affix to passport →</PlateButton>
           <div className="mt-4 text-center">
             {retakeUsed ? (
-              <span className="font-type text-[10.5px] tracking-[0.14em] text-faded">
+              <span className="font-geo text-[10.5px] tracking-[0.14em] text-faded">
                 AMENDMENT USED — NO FURTHER RE-SITTINGS
               </span>
             ) : (
@@ -93,14 +93,14 @@ export default function StripReveal({
 
       {printed && confirming && (
         <div className="rise-in relative z-10 mx-auto mt-4 w-full max-w-[330px] border-2 border-ink bg-paper px-4 py-4 shadow-strip">
-          <p className="font-type text-[12.5px] leading-snug text-ink">
-            An amendment voids these exposures. The bureau permits ONE (1) per
+          <p className="font-geo text-[12.5px] leading-snug text-ink">
+            An amendment voids these exposures. The company permits ONE (1) per
             record.
           </p>
           <div className="mt-4 flex items-center justify-between">
             <button
               onClick={onAmend}
-              className="press border-[1.5px] border-stamp px-3 py-2 font-type text-[11.5px] tracking-[0.14em] text-stamp"
+              className="press border-[1.5px] border-signal px-3 py-2 font-geo text-[11.5px] tracking-[0.14em] text-signal"
             >
               RE-SIT NOW
             </button>

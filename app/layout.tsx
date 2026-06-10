@@ -1,16 +1,26 @@
 import type { Metadata, Viewport } from "next";
+import RegisterSW from "@/components/RegisterSW";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Photobooth Passport",
   description:
     "A pocket photobooth. Four exposures, one strip, stamped into your passport.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Photobooth",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#14110E",
+  themeColor: "#1F3A5F",
   viewportFit: "cover",
 };
 
@@ -29,11 +39,14 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Jost:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased font-type">{children}</body>
+      <body className="antialiased font-geo">
+        {children}
+        <RegisterSW />
+      </body>
     </html>
   );
 }

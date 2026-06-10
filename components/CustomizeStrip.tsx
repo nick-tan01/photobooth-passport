@@ -16,7 +16,7 @@ interface Props {
   onAffix: () => void;
 }
 
-const CORNER = "absolute h-7 w-7 bg-[#D8C9A6] shadow-sm";
+const CORNER = "absolute h-7 w-7 bg-[#DFD3B4] shadow-sm";
 
 export function PhotoCorners() {
   return (
@@ -71,8 +71,8 @@ export default function CustomizeStrip({
   );
 
   return (
-    <div className="relative min-h-dvh bg-manila px-5 pb-10 pt-7">
-      <p className="relative z-10 text-center font-type text-[10px] tracking-[0.26em] text-faded">
+    <div className="relative min-h-dvh bg-cream px-5 pb-10 pt-7">
+      <p className="relative z-10 text-center font-geo text-[10px] tracking-[0.26em] text-faded">
         FINISHING · THE STRIP PRINTS WHAT YOU TYPE
       </p>
 
@@ -90,7 +90,7 @@ export default function CustomizeStrip({
 
       <div className="relative z-10 mx-auto mt-6 w-full max-w-[320px] space-y-5">
         <label className="block">
-          <span className="font-type text-[10px] tracking-[0.24em] text-faded">
+          <span className="font-geo text-[10px] tracking-[0.24em] text-faded">
             CAPTION — OPTIONAL
           </span>
           <input
@@ -100,12 +100,12 @@ export default function CustomizeStrip({
               onCaption(e.target.value);
               schedule(e.target.value, latest.current.dateText);
             }}
-            placeholder="WRITE SOMETHING SMALL"
-            className="typed-field font-type mt-1 w-full text-center uppercase tracking-wide"
+            placeholder="Write something small"
+            className="typed-field font-display mt-1 w-full text-center italic tracking-wide"
           />
         </label>
         <label className="mx-auto block w-[220px]">
-          <span className="font-type text-[10px] tracking-[0.24em] text-faded">
+          <span className="font-geo text-[10px] tracking-[0.24em] text-faded">
             DATED
           </span>
           <input
@@ -115,14 +115,14 @@ export default function CustomizeStrip({
               onDate(e.target.value);
               schedule(latest.current.caption, e.target.value);
             }}
-            className="typed-field font-type mt-1 w-full text-center uppercase tracking-wide"
+            className="typed-field font-geo mt-1 w-full text-center uppercase tracking-wide"
           />
         </label>
       </div>
 
       <div className="relative z-10 mx-auto mt-7 w-full max-w-[330px]">
         <PlateButton onClick={onAffix}>Affix &amp; stamp</PlateButton>
-        <p className="mt-3 text-center font-type text-[10px] tracking-[0.2em] text-faded">
+        <p className="mt-3 text-center font-geo text-[10px] tracking-[0.2em] text-faded">
           THE RECORD WILL BE FILED IN YOUR PASSPORT
         </p>
       </div>

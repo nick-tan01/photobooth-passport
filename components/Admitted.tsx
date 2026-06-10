@@ -71,14 +71,14 @@ export default function Admitted({
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-manila px-5 pb-10 pt-9">
-      <p className="relative z-10 text-center font-type text-[10px] tracking-[0.26em] text-faded">
-        BUREAU OF MEMORIES
+    <div className="relative flex min-h-dvh flex-col bg-cream px-5 pb-10 pt-9">
+      <p className="relative z-10 text-center font-geo text-[10px] tracking-[0.26em] text-faded">
+        THE GRAND TOUR COMPANY
       </p>
-      <h1 className="relative z-10 mt-1 text-center font-caslon text-[26px] font-bold text-ink">
+      <h1 className="relative z-10 mt-1 text-center font-display text-[26px] font-bold text-ink">
         Record filed.
       </h1>
-      <p className="relative z-10 mt-1 text-center font-type text-[11.5px] tracking-[0.14em] text-ink-soft">
+      <p className="relative z-10 mt-1 text-center font-geo text-[11.5px] tracking-[0.14em] text-ink-soft">
         No. {serial} — {booth.name.toUpperCase()}
       </p>
 

@@ -13,6 +13,7 @@ import StripReveal from "@/components/StripReveal";
 import CustomizeStrip from "@/components/CustomizeStrip";
 import Admitted from "@/components/Admitted";
 import Passport from "@/components/Passport";
+import BoothMap from "@/components/BoothMap";
 
 const MONTHS = [
   "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
@@ -134,7 +135,7 @@ export default function Home() {
   }
 
   return (
-    <main className="relative mx-auto min-h-dvh w-full max-w-app overflow-x-hidden bg-manila shadow-[0_0_60px_rgba(0,0,0,0.55)]">
+    <main className="relative mx-auto min-h-dvh w-full max-w-app overflow-x-hidden bg-cream shadow-[0_0_60px_rgba(0,0,0,0.55)]">
       <div key={view} className="screen-in">
         {view === "cover" && <Cover onOpen={() => setView("directory")} />}
 
@@ -142,6 +143,7 @@ export default function Home() {
           <BoothDirectory
             onSelect={selectBooth}
             onPassport={() => setView("passport")}
+            onMap={() => setView("map")}
           />
         )}
 
@@ -203,7 +205,18 @@ export default function Home() {
         )}
 
         {view === "passport" && (
-          <Passport onDirectory={() => setView("directory")} />
+          <Passport
+            onDirectory={() => setView("directory")}
+            onMap={() => setView("map")}
+          />
+        )}
+
+        {view === "map" && (
+          <BoothMap
+            onBack={() => setView("directory")}
+            onEnterBooth={selectBooth}
+            onOpenPassport={() => setView("passport")}
+          />
         )}
       </div>
     </main>

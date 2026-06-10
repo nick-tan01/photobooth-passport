@@ -1,7 +1,7 @@
 import type { BoothId } from "./types";
 
-export const CASLON = '"Libre Caslon Text", Georgia, serif';
-export const TYPEWRITER = '"Special Elite", "Courier New", monospace';
+export const DISPLAY = '"Playfair Display", Georgia, serif';
+export const GEO = 'Jost, "Avenir Next", Futura, sans-serif';
 
 export interface StampSpec {
   top: string;
@@ -45,6 +45,8 @@ function esc(s: string): string {
 
 export function buildBoothStampSvg(spec: StampSpec, uid: string): string {
   const { top, bottom, glyph, color } = spec;
+  const topSize = top.length > 16 ? 8.5 : 10.5;
+  const topTrack = top.length > 16 ? 1.1 : 1.8;
   const paths = GLYPHS[glyph]
     .map((p) => `<path d="${p.d}" stroke-width="${p.w}"/>`)
     .join("");
@@ -52,17 +54,17 @@ export function buildBoothStampSvg(spec: StampSpec, uid: string): string {
 <defs>
 <filter id="rg-${uid}" x="-8%" y="-8%" width="116%" height="116%">
 <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="7" result="n"/>
-<feDisplacementMap in="SourceGraphic" in2="n" scale="2.8"/>
+<feDisplacementMap in="SourceGraphic" in2="n" scale="1.6"/>
 </filter>
 <path id="at-${uid}" d="M 14 60 A 46 46 0 0 1 106 60" fill="none"/>
 <path id="ab-${uid}" d="M 14 60 A 46 46 0 0 0 106 60" fill="none"/>
 </defs>
 <g filter="url(#rg-${uid})" stroke="${color}" fill="none" stroke-linecap="round" stroke-linejoin="round">
-<circle cx="60" cy="60" r="55" stroke-width="3.2"/>
-<circle cx="60" cy="60" r="37" stroke-width="1.4"/>
+<circle cx="60" cy="60" r="55" stroke-width="3"/>
+<circle cx="60" cy="60" r="37" stroke-width="1.3"/>
 <g transform="translate(60 60)">${paths}</g>
-<g stroke="none" fill="${color}" font-family="${esc(CASLON)}">
-<text font-size="10.5" letter-spacing="1.8"><textPath href="#at-${uid}" startOffset="50%" text-anchor="middle">${esc(top)}</textPath></text>
+<g stroke="none" fill="${color}" font-family="${esc(DISPLAY)}">
+<text font-size="${topSize}" letter-spacing="${topTrack}"><textPath href="#at-${uid}" startOffset="50%" text-anchor="middle">${esc(top)}</textPath></text>
 <text font-size="8.5" letter-spacing="1.2"><textPath href="#ab-${uid}" startOffset="50%" text-anchor="middle">${esc(bottom)}</textPath></text>
 </g>
 <circle cx="14" cy="60" r="1.8" fill="${color}" stroke="none"/>
@@ -80,14 +82,14 @@ export function buildEntryStampSvg(
 <defs>
 <filter id="re-${uid}" x="-8%" y="-12%" width="116%" height="124%">
 <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="11" result="n"/>
-<feDisplacementMap in="SourceGraphic" in2="n" scale="3"/>
+<feDisplacementMap in="SourceGraphic" in2="n" scale="1.8"/>
 </filter>
 </defs>
 <g filter="url(#re-${uid})" stroke="${color}" fill="none">
 <rect x="4" y="4" width="222" height="88" stroke-width="3"/>
 <rect x="11" y="11" width="208" height="74" stroke-width="1.3"/>
-<text x="115" y="50" stroke="none" fill="${color}" font-family="${esc(CASLON)}" font-weight="700" font-size="26" letter-spacing="6" text-anchor="middle">${esc(word)}</text>
-<text x="115" y="73" stroke="none" fill="${color}" font-family="${esc(CASLON)}" font-size="12" letter-spacing="3" text-anchor="middle">· ${esc(date)} ·</text>
+<text x="115" y="50" stroke="none" fill="${color}" font-family="${esc(DISPLAY)}" font-weight="700" font-size="26" letter-spacing="6" text-anchor="middle">${esc(word)}</text>
+<text x="115" y="73" stroke="none" fill="${color}" font-family="${esc(DISPLAY)}" font-size="12" letter-spacing="3" text-anchor="middle">· ${esc(date)} ·</text>
 </g>
 </svg>`;
 }
@@ -103,7 +105,7 @@ function drawArcText(
   tracking: number,
   inward: boolean,
 ) {
-  ctx.font = `${fontPx}px ${CASLON}`;
+  ctx.font = `${fontPx}px ${DISPLAY}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   const chars = [...text];
@@ -147,17 +149,17 @@ export function drawBoothStamp(
   // two passes: solid impression + faintly offset ghost for ink bleed
   const passes: [number, number, number][] = [
     [0, 0, alpha],
-    [0.9, 0.7, alpha * 0.3],
+    [0.7, 0.5, alpha * 0.22],
   ];
   for (const [ox, oy, a] of passes) {
     ctx.save();
     ctx.translate(ox, oy);
     ctx.globalAlpha = a;
-    ctx.lineWidth = 3.2;
+    ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(0, 0, 55, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.lineWidth = 1.4;
+    ctx.lineWidth = 1.3;
     ctx.beginPath();
     ctx.arc(0, 0, 37, 0, Math.PI * 2);
     ctx.stroke();
@@ -165,7 +167,15 @@ export function drawBoothStamp(
       ctx.lineWidth = p.w;
       ctx.stroke(new Path2D(p.d));
     }
-    drawArcText(ctx, spec.top, 46, -Math.PI / 2, 10.5, 2, false);
+    drawArcText(
+      ctx,
+      spec.top,
+      46,
+      -Math.PI / 2,
+      spec.top.length > 16 ? 8.5 : 10.5,
+      spec.top.length > 16 ? 1.2 : 2,
+      false,
+    );
     drawArcText(ctx, spec.bottom, 46, Math.PI / 2, 8.5, 1.4, true);
     ctx.beginPath();
     ctx.arc(-46, 0, 1.8, 0, Math.PI * 2);

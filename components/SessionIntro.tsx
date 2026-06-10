@@ -35,27 +35,27 @@ export default function SessionIntro({
   onBack,
 }: Props) {
   return (
-    <div className="relative min-h-dvh bg-manila px-5 pb-10 pt-7">
+    <div className="relative min-h-dvh bg-cream px-5 pb-10 pt-7">
       <div className="relative z-10">
         <TypeLink onClick={onBack}>← DIRECTORY</TypeLink>
       </div>
 
       <div className="relative z-10 mt-4 border-2 border-ink bg-paper px-5 pb-6 pt-5 shadow-strip">
         <div className="flex items-baseline justify-between">
-          <p className="font-type text-[10px] tracking-[0.26em] text-faded">
-            FORM 4-P
+          <p className="font-geo text-[10px] tracking-[0.26em] text-faded">
+            SITTING CARD
           </p>
-          <p className="font-type text-[10px] tracking-[0.26em] text-faded">
-            BUREAU OF MEMORIES
+          <p className="font-geo text-[10px] tracking-[0.26em] text-faded">
+            THE GRAND TOUR CO.
           </p>
         </div>
-        <h1 className="mt-1 font-caslon text-[23px] font-bold text-ink">
+        <h1 className="mt-1 font-display text-[23px] font-bold text-ink">
           Record of Sitting
         </h1>
         <div className="mt-2 border-t-2 border-ink" />
         <div className="mt-[3px] border-t border-ink/40" />
 
-        <dl className="mt-4 space-y-2 font-type text-[13px]">
+        <dl className="mt-4 space-y-2 font-geo text-[13px]">
           <div className="flex gap-2">
             <dt className="w-[86px] shrink-0 text-[11px] tracking-[0.14em] text-faded">
               BOOTH
@@ -82,10 +82,13 @@ export default function SessionIntro({
           </div>
         </dl>
 
-        <ol className="mt-5 space-y-3">
+        <p className="mt-5 font-geo text-[9px] font-semibold tracking-[0.26em] text-gold">
+          TERMS OF CARRIAGE
+        </p>
+        <ol className="mt-2 space-y-3">
           {CLAUSES.map((c, i) => (
-            <li key={i} className="flex gap-3 font-type text-[12.5px] leading-snug text-ink">
-              <span className="shrink-0 text-faded">{i + 1}.</span>
+            <li key={i} className="flex gap-3 font-geo text-[12.5px] leading-snug text-ink">
+              <span className="shrink-0 font-semibold text-gold">{i + 1}.</span>
               <span>{c}</span>
             </li>
           ))}
@@ -113,7 +116,7 @@ export default function SessionIntro({
 
       <div className="relative z-10 mx-auto mt-6 max-w-[330px]">
         <PlateButton onClick={onBegin}>Begin the sitting</PlateButton>
-        <p className="mt-3 text-center font-type text-[10.5px] tracking-[0.22em] text-faded">
+        <p className="mt-3 text-center font-geo text-[10.5px] tracking-[0.22em] text-faded">
           THE COUNTDOWN BEGINS AT ONCE
         </p>
       </div>

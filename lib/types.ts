@@ -5,10 +5,14 @@ export interface Booth {
   name: string;
   locale: string;
   stampLocale: string;
+  motto: string;
   tagline: string;
+  place: string;
   prefix: string;
   accent: string;
   paper: string;
+  // position on the Route Map, in map SVG viewBox coordinates (390 x 300)
+  map: { x: number; y: number };
   exclusive?: { place: string; note: string };
   prompts: string[];
 }
@@ -31,4 +35,5 @@ export type View =
   | "reveal"
   | "customize"
   | "admitted"
-  | "passport";
+  | "passport"
+  | "map";

@@ -1,10 +1,10 @@
 import type { Booth } from "./types";
-import { drawBoothStamp, CASLON, TYPEWRITER } from "./stamp";
+import { drawBoothStamp, DISPLAY, GEO } from "./stamp";
 
 const W = 720;
 const M = 46;
 const GAP = 26;
-const HEADER = 96;
+const HEADER = 108;
 const FOOTER = 196;
 const PHOTO = W - M * 2;
 const H = HEADER + PHOTO * 4 + GAP * 3 + FOOTER;
@@ -23,9 +23,12 @@ export async function ensureFonts() {
   if (typeof document === "undefined" || !("fonts" in document)) return;
   try {
     await Promise.all([
-      document.fonts.load(`16px ${TYPEWRITER}`),
-      document.fonts.load(`16px ${CASLON}`),
-      document.fonts.load(`700 16px ${CASLON}`),
+      document.fonts.load(`16px ${GEO}`),
+      document.fonts.load(`500 16px ${GEO}`),
+      document.fonts.load(`600 16px ${GEO}`),
+      document.fonts.load(`16px ${DISPLAY}`),
+      document.fonts.load(`700 16px ${DISPLAY}`),
+      document.fonts.load(`italic 600 16px ${DISPLAY}`),
     ]);
   } catch {
     // draw with fallbacks
@@ -116,7 +119,7 @@ function paperNoise(
   tctx.putImageData(img, 0, 0);
   ctx.save();
   ctx.globalCompositeOperation = "multiply";
-  ctx.globalAlpha = 0.55;
+  ctx.globalAlpha = 0.4;
   for (let y = 0; y < h; y += 128) {
     for (let x = 0; x < w; x += 128) {
       ctx.drawImage(tile, x, y);
@@ -143,13 +146,14 @@ export async function compositeStrip(input: StripInput): Promise<Blob> {
   // header
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = "#29251F";
-  ctx.font = `700 22px ${CASLON}`;
-  drawTracked(ctx, "BUREAU OF MEMORIES", W / 2, 46, 5);
-  ctx.font = `15px ${TYPEWRITER}`;
-  ctx.fillStyle = booth.accent;
-  drawTracked(ctx, `${booth.name.toUpperCase()} · 4 EXPOSURES`, W / 2, 73, 2);
-  rule(ctx, M, 86, W - M, "rgba(41,37,31,0.85)", 1.4);
+  ctx.fillStyle = "#1F3A5F";
+  ctx.font = `600 17px ${GEO}`;
+  drawTracked(ctx, "PHOTOBOOTH PASSPORT", W / 2, 44, 6);
+  ctx.font = `700 24px ${DISPLAY}`;
+  ctx.fillStyle = "#22262B";
+  ctx.fillText(booth.name, W / 2, 80);
+  rule(ctx, M, 92, W - M, "#C9A86A", 2.5);
+  rule(ctx, M, 97, W - M, "rgba(31,58,95,0.35)", 1);
 
   // photos with slight misalignment, warm tone, vignette
   const imgs = await Promise.all(photos.map(loadImage));
@@ -170,11 +174,11 @@ export async function compositeStrip(input: StripInput): Promise<Blob> {
     ctx.fillStyle = "rgba(244,237,222,0.07)";
     ctx.fillRect(-half, -half, PHOTO, PHOTO);
     const g = ctx.createRadialGradient(0, 0, PHOTO * 0.32, 0, 0, PHOTO * 0.74);
-    g.addColorStop(0, "rgba(41,37,31,0)");
-    g.addColorStop(1, "rgba(41,37,31,0.20)");
+    g.addColorStop(0, "rgba(34,38,43,0)");
+    g.addColorStop(1, "rgba(34,38,43,0.20)");
     ctx.fillStyle = g;
     ctx.fillRect(-half, -half, PHOTO, PHOTO);
-    ctx.strokeStyle = "rgba(41,37,31,0.85)";
+    ctx.strokeStyle = "rgba(34,38,43,0.85)";
     ctx.lineWidth = 2;
     ctx.strokeRect(-half + 1, -half + 1, PHOTO - 2, PHOTO - 2);
     ctx.restore();
@@ -184,29 +188,31 @@ export async function compositeStrip(input: StripInput): Promise<Blob> {
   const fy = HEADER + PHOTO * 4 + GAP * 3;
   ctx.textAlign = "center";
   if (caption.trim()) {
-    ctx.fillStyle = "#2F4670";
-    ctx.font = `26px ${TYPEWRITER}`;
-    ctx.fillText(caption.toUpperCase(), W / 2, fy + 58, W - M * 2 - 130);
+    ctx.fillStyle = "#1F3A5F";
+    ctx.font = `italic 600 30px ${DISPLAY}`;
+    ctx.fillText(caption, W / 2 - 24, fy + 60, W - M * 2 - 150);
   } else {
-    rule(ctx, W / 2 - 170, fy + 58, W / 2 + 110, "rgba(41,37,31,0.3)", 1.5);
+    rule(ctx, W / 2 - 170, fy + 58, W / 2 + 110, "rgba(34,38,43,0.3)", 1.5);
   }
-  ctx.fillStyle = "#29251F";
-  ctx.font = `17px ${TYPEWRITER}`;
-  ctx.fillText(`DATED ${dateText.toUpperCase()}`, W / 2 - 28, fy + 98);
+  ctx.fillStyle = "#22262B";
+  ctx.font = `500 16px ${GEO}`;
+  drawTracked(ctx, `DATED ${dateText.toUpperCase()}`, W / 2 - 28, fy + 100, 2);
 
-  ctx.font = `14px ${TYPEWRITER}`;
-  ctx.fillStyle = "rgba(41,37,31,0.78)";
+  ctx.font = `500 14px ${GEO}`;
+  ctx.fillStyle = "rgba(34,38,43,0.78)";
   ctx.textAlign = "left";
   ctx.fillText(`No. ${serial}`, M, fy + 148);
   ctx.textAlign = "right";
-  ctx.fillText("FORM 4-P", W - M, fy + 148);
+  ctx.fillText("FOUR EXPOSURES", W - M, fy + 148);
   ctx.textAlign = "center";
-  ctx.fillStyle = "rgba(41,37,31,0.55)";
-  ctx.font = `12px ${TYPEWRITER}`;
-  ctx.fillText(
-    "ISSUED BY THE BUREAU OF MEMORIES · ONE AMENDMENT PERMITTED",
+  ctx.fillStyle = "rgba(34,38,43,0.55)";
+  ctx.font = `12px ${GEO}`;
+  drawTracked(
+    ctx,
+    "ISSUED BY THE GRAND TOUR COMPANY · ONE AMENDMENT PERMITTED",
     W / 2,
     fy + 174,
+    1,
   );
 
   drawBoothStamp(

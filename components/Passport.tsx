@@ -16,7 +16,13 @@ interface Item {
   url: string;
 }
 
-export default function Passport({ onDirectory }: { onDirectory: () => void }) {
+export default function Passport({
+  onDirectory,
+  onMap,
+}: {
+  onDirectory: () => void;
+  onMap: () => void;
+}) {
   const [items, setItems] = useState<Item[] | null>(null);
   const [page, setPage] = useState(0);
   const [voiding, setVoiding] = useState(false);
@@ -56,15 +62,18 @@ export default function Passport({ onDirectory }: { onDirectory: () => void }) {
   const current = items && items.length > 0 ? items[Math.min(page, items.length - 1)] : null;
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-manila px-5 pb-8 pt-7">
+    <div className="relative flex min-h-dvh flex-col bg-cream px-5 pb-8 pt-7">
       <header className="relative z-10">
-        <TypeLink onClick={onDirectory}>← BOOTHS</TypeLink>
+        <div className="flex items-center justify-between">
+          <TypeLink onClick={onDirectory}>← BOOTHS</TypeLink>
+          <TypeLink onClick={onMap}>ROUTE MAP →</TypeLink>
+        </div>
         <div className="mt-3 flex items-end justify-between">
           <div>
-            <h1 className="font-caslon text-[27px] font-bold text-ink">
+            <h1 className="font-display text-[27px] font-bold text-ink">
               Passport
             </h1>
-            <p className="font-type text-[10px] tracking-[0.26em] text-faded">
+            <p className="font-geo text-[10px] tracking-[0.26em] text-faded">
               RECORDS OF MEMORY
             </p>
           </div>
@@ -78,7 +87,7 @@ export default function Passport({ onDirectory }: { onDirectory: () => void }) {
                   className="flex h-10 w-10 items-center justify-center rounded-full border-[1.5px] border-dashed border-faded/70"
                   title={`${b.name} — not yet collected`}
                 >
-                  <span className="font-type text-[8.5px] text-faded">
+                  <span className="font-geo text-[8.5px] text-faded">
                     {b.prefix}
                   </span>
                 </div>
@@ -92,9 +101,9 @@ export default function Passport({ onDirectory }: { onDirectory: () => void }) {
 
       {/* the page */}
       <div className="relative z-10 mx-auto mt-5 w-full max-w-[340px]">
-        <div className="relative min-h-[440px] border border-ink/25 border-l-2 border-l-ink/40 bg-manila-deep/45 px-6 pb-6 pt-7 [border-left-style:dashed]">
+        <div className="relative min-h-[440px] border border-ink/25 border-l-2 border-l-ink/40 bg-cream-deep/45 px-6 pb-6 pt-7 [border-left-style:dashed]">
           {items === null && (
-            <p className="soft-blink mt-24 text-center font-type text-[11px] tracking-[0.25em] text-faded">
+            <p className="soft-blink mt-24 text-center font-geo text-[11px] tracking-[0.25em] text-faded">
               OPENING THE REGISTER…
             </p>
           )}
@@ -102,11 +111,11 @@ export default function Passport({ onDirectory }: { onDirectory: () => void }) {
           {items !== null && !current && (
             <div className="flex flex-col items-center pt-10">
               <div className="flex h-[280px] w-[120px] items-center justify-center border-2 border-dashed border-faded/60">
-                <span className="-rotate-90 whitespace-nowrap font-type text-[10px] tracking-[0.3em] text-faded">
+                <span className="-rotate-90 whitespace-nowrap font-geo text-[10px] tracking-[0.3em] text-faded">
                   STRIP GOES HERE
                 </span>
               </div>
-              <p className="mt-6 font-type text-[12px] tracking-[0.14em] text-ink-soft">
+              <p className="mt-6 font-geo text-[12px] tracking-[0.14em] text-ink-soft">
                 NO RECORDS ON FILE.
               </p>
               <div className="mt-5 w-full max-w-[240px]">
@@ -133,11 +142,11 @@ export default function Passport({ onDirectory }: { onDirectory: () => void }) {
                 </div>
               </div>
               <div className="mt-9 flex items-center justify-between">
-                <span className="font-type text-[10.5px] tracking-[0.12em] text-ink-soft">
+                <span className="font-geo text-[10.5px] tracking-[0.12em] text-ink-soft">
                   No. {current.rec.serial}
                 </span>
                 {voiding ? (
-                  <span className="font-type text-[10.5px] text-stamp">
+                  <span className="font-geo text-[10.5px] text-signal">
                     VOID THIS RECORD?{" "}
                     <button
                       className="underline underline-offset-2"
@@ -156,7 +165,7 @@ export default function Passport({ onDirectory }: { onDirectory: () => void }) {
                 ) : (
                   <button
                     onClick={() => setVoiding(true)}
-                    className="font-type text-[10px] tracking-[0.18em] text-faded underline underline-offset-2"
+                    className="font-geo text-[10px] tracking-[0.18em] text-faded underline underline-offset-2"
                   >
                     VOID
                   </button>
@@ -179,7 +188,7 @@ export default function Passport({ onDirectory }: { onDirectory: () => void }) {
           >
             ‹ EARLIER
           </TypeLink>
-          <span className="font-type text-[10.5px] tracking-[0.22em] text-faded">
+          <span className="font-geo text-[10.5px] tracking-[0.22em] text-faded">
             LEAF {Math.min(page, items.length - 1) + 1} OF {items.length}
           </span>
           <TypeLink
