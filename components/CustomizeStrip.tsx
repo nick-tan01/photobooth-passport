@@ -76,7 +76,7 @@ export default function CustomizeStrip({
   );
 
   return (
-    <div className="relative min-h-dvh bg-cream px-5 pb-10 pt-7">
+    <div className="relative min-h-dvh bg-cream px-5 pb-10 pt-safe">
       <p className="relative z-10 text-center font-geo text-[10px] tracking-[0.26em] text-faded">
         FINISHING · THE STRIP PRINTS WHAT YOU TYPE
       </p>

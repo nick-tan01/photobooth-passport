@@ -132,7 +132,7 @@ export default function CaptureBooth({
   );
 
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-booth px-6 pb-8">
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-booth px-6 pb-safe">
       <svg
         aria-hidden
         className="pointer-events-none absolute left-0 top-0 z-0 w-full"
@@ -144,7 +144,7 @@ export default function CaptureBooth({
         ))}
       </svg>
 
-      <div className="relative z-10 flex items-center justify-between pt-9">
+      <div className="relative z-10 flex items-center justify-between pt-safe-lg">
         <button
           onClick={onAbort}
           className="font-geo text-[11px] tracking-[0.2em] text-paper/60"

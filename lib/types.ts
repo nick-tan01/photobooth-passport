@@ -22,9 +22,12 @@ export interface Booth {
   prefix: string;
   accent: string;
   paper: string;
-  // position on the Route Map, in map SVG viewBox coordinates (390 x 300);
-  // only kind "place" booths appear on the map
+  // pin position on the Route Map, in map SVG viewBox coordinates
+  // (390 x 300); only kind "place" booths appear on the map
   map?: { x: number; y: number };
+  // when the pin is offset for legibility, the true projected location —
+  // drawn as a dot with a leader line to the pin
+  mapTrue?: { x: number; y: number };
   // seasonal booths only issue during these months (0-11)
   season?: { months: number[]; returns: string };
   exclusive?: {

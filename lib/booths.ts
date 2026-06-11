@@ -15,7 +15,8 @@ export const BOOTHS: Booth[] = [
     prefix: "STD",
     accent: "#1F3A5F",
     paper: "#F9F4E9",
-    map: { x: 236, y: 112 },
+    map: { x: 238, y: 112 },
+    mapTrue: { x: 259, y: 158 },
     prompts: [
       "SIT UP STRAIGHT, PLEASE",
       "NOW — A REAL SMILE",
@@ -40,7 +41,7 @@ export const BOOTHS: Booth[] = [
     prefix: "MDX",
     accent: "#44406E",
     paper: "#F5F0E4",
-    map: { x: 182, y: 92 },
+    map: { x: 210, y: 134 },
     prompts: [
       "PRETEND YOU'RE BEING FOLLOWED",
       "WHISPER A SECRET",
@@ -65,7 +66,7 @@ export const BOOTHS: Booth[] = [
     prefix: "SEA",
     accent: "#2F6B5E",
     paper: "#F8F4E6",
-    map: { x: 148, y: 168 },
+    map: { x: 140, y: 196 },
     prompts: [
       "SQUINT INTO THE SUN",
       "HOLD AN INVISIBLE ICE CREAM",
@@ -90,7 +91,8 @@ export const BOOTHS: Booth[] = [
     prefix: "MTL",
     accent: "#5A3F6E",
     paper: "#F6F1E6",
-    map: { x: 266, y: 100 },
+    map: { x: 293, y: 128 },
+    mapTrue: { x: 273, y: 147 },
     prompts: [
       "SAY BONJOUR-HI",
       "INVISIBLE CROISSANT, BIG BITE",
@@ -115,7 +117,8 @@ export const BOOTHS: Booth[] = [
     prefix: "NIA",
     accent: "#37596E",
     paper: "#F4F1E6",
-    map: { x: 281, y: 157 },
+    map: { x: 268, y: 196 },
+    mapTrue: { x: 260, y: 160 },
     exclusive: {
       place: "TABLE ROCK, NIAGARA FALLS",
       note: "Presence verified by location — or simulated for demonstration.",

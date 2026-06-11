@@ -150,6 +150,13 @@ export default function Home() {
 
   return (
     <main className="relative mx-auto min-h-dvh w-full max-w-app overflow-x-hidden bg-cream shadow-[0_0_60px_rgba(0,0,0,0.55)]">
+      {/* installed mode: a navy band under the status bar / Dynamic Island
+          so the clock stays readable over every screen */}
+      <div
+        aria-hidden
+        className="fixed inset-x-0 top-0 z-[60] bg-navy-deep"
+        style={{ height: "env(safe-area-inset-top, 0px)" }}
+      />
       <div key={view} className="screen-in">
         {view === "cover" && <Cover onOpen={() => setView("directory")} />}
 

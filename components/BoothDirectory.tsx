@@ -47,22 +47,21 @@ function BoothRow({
               {booth.name}
             </span>
           </div>
-          <p className="mt-1 font-geo text-[9px] tracking-[0.12em] text-faded">
-            {booth.locale} — {booth.motto}
-          </p>
-          {ex && !locked && (
-            <>
-              <span className="mt-2 inline-block bg-signal px-2 py-[3px] font-geo text-[8px] font-semibold tracking-[0.18em] text-paper">
+          <p className="mt-1 flex items-center gap-2 font-geo text-[9px] tracking-[0.12em] text-faded">
+            <span className="truncate">
+              {ex || locked ? booth.locale : `${booth.locale} — ${booth.motto}`}
+            </span>
+            {ex && !locked && (
+              <span className="shrink-0 bg-signal px-1.5 py-[2px] text-[7.5px] font-semibold tracking-[0.14em] text-paper">
                 ON LOCATION ONLY
               </span>
-              <p className="mt-1.5 font-geo text-[9px] text-faded">{ex.note}</p>
-            </>
-          )}
-          {locked && (
-            <span className="mt-2 inline-block border border-dashed border-faded px-2 py-[3px] font-geo text-[8px] font-semibold tracking-[0.18em] text-faded">
-              {locked}
-            </span>
-          )}
+            )}
+            {locked && (
+              <span className="shrink-0 border border-dashed border-faded px-1.5 py-[2px] text-[7.5px] font-semibold tracking-[0.14em] text-faded">
+                {locked}
+              </span>
+            )}
+          </p>
         </div>
         <div
           className={`shrink-0 ${ex ? "rounded-full border-2 border-gold p-[3px]" : ""} ${
@@ -116,7 +115,7 @@ export default function BoothDirectory({
 
   return (
     <div className="relative min-h-dvh bg-cream pb-10">
-      <header className="relative z-10 bg-navy px-5 pb-4 pt-7">
+      <header className="relative z-10 bg-navy px-5 pb-4 pt-safe">
         <div className="flex items-baseline justify-between">
           <span className="font-geo text-[9px] font-semibold tracking-[0.3em] text-gold">
             PHOTOBOOTH PASSPORT

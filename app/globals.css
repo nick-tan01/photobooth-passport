@@ -171,6 +171,26 @@ input {
   animation: rise-in 360ms ease-out both;
 }
 
+/* ---- safe-area padding for installed (standalone) mode ----
+   In a home-screen install with viewport-fit=cover the page extends
+   under the status bar / Dynamic Island; these pad screen tops by the
+   device inset plus the design's own padding. */
+.pt-safe {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1.75rem);
+}
+.pt-safe-lg {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 2.25rem);
+}
+.pt-safe-xl {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+}
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 2rem);
+}
+.pb-safe-xl {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 3rem);
+}
+
 /* ---- passport page turn ---- */
 @keyframes page-turn {
   from {

@@ -33,7 +33,7 @@ export default function StripReveal({
   }, [stripUrl]);
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-cream px-5 pb-8 pt-7">
+    <div className="relative flex min-h-dvh flex-col bg-cream px-5 pb-8 pt-safe">
       <p className="relative z-10 text-center font-geo text-[10px] tracking-[0.26em] text-faded">
         THE GRAND TOUR COMPANY · DELIVERY
       </p>

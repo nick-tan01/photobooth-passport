@@ -81,7 +81,7 @@ export default function Passport({
   const current = items && items.length > 0 ? items[Math.min(page, items.length - 1)] : null;
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-cream px-5 pb-8 pt-7">
+    <div className="relative flex min-h-dvh flex-col bg-cream px-5 pb-8 pt-safe">
       <header className="relative z-10">
         <div className="flex items-center justify-between">
           <TypeLink onClick={onDirectory}>← BOOTHS</TypeLink>

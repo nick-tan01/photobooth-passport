@@ -16,7 +16,7 @@ export default function Cover({ onOpen }: { onOpen: () => void }) {
   return (
     <button
       onClick={onOpen}
-      className="relative flex min-h-dvh w-full flex-col items-center justify-between overflow-hidden bg-navy px-8 pb-12 pt-14 text-center"
+      className="relative flex min-h-dvh w-full flex-col items-center justify-between overflow-hidden bg-navy px-8 pb-safe-xl pt-safe-xl text-center"
       aria-label="Open your photobooth passport"
     >
       <div

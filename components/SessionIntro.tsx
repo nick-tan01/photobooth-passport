@@ -79,7 +79,7 @@ export default function SessionIntro({
   }
 
   return (
-    <div className="relative min-h-dvh bg-cream px-5 pb-10 pt-7">
+    <div className="relative min-h-dvh bg-cream px-5 pb-10 pt-safe">
       <div className="relative z-10">
         <TypeLink onClick={onBack}>← DIRECTORY</TypeLink>
       </div>
