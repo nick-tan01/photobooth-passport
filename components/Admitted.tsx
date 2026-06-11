@@ -5,6 +5,8 @@
 import { useEffect, useState } from "react";
 import type { Booth } from "@/lib/types";
 import { playThunk, buzz } from "@/lib/audio";
+import { composeShareCard } from "@/lib/sharecard";
+import { signal } from "@/lib/signals";
 import { EntryStamp } from "./Stamp";
 import { PlateButton, TypeLink } from "./Controls";
 import { PhotoCorners } from "./CustomizeStrip";
@@ -31,6 +33,8 @@ export default function Admitted({
 }: Props) {
   const [stamped, setStamped] = useState(false);
   const [canShare, setCanShare] = useState(false);
+  const [printNoted, setPrintNoted] = useState(false);
+  const [cardBusy, setCardBusy] = useState(false);
 
   useEffect(() => {
     setCanShare(typeof navigator !== "undefined" && !!navigator.canShare);
@@ -42,15 +46,20 @@ export default function Admitted({
     return () => clearTimeout(t);
   }, []);
 
-  function download() {
-    const blob = getBlob();
-    if (!blob) return;
+  function saveBlob(blob: Blob, name: string) {
     const a = document.createElement("a");
     const u = URL.createObjectURL(blob);
     a.href = u;
-    a.download = `photobooth-${serial}.jpg`;
+    a.download = name;
     a.click();
     setTimeout(() => URL.revokeObjectURL(u), 4000);
+  }
+
+  function download() {
+    const blob = getBlob();
+    if (!blob) return;
+    signal("strip_shared");
+    saveBlob(blob, `photobooth-${serial}.jpg`);
   }
 
   async function share() {
@@ -62,12 +71,40 @@ export default function Admitted({
     if (navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({ files: [file], title: "Photobooth Passport" });
+        signal("strip_shared");
         return;
       } catch {
         return; // user dismissed the sheet
       }
     }
     download();
+  }
+
+  async function shareStoryCard() {
+    const blob = getBlob();
+    if (!blob || cardBusy) return;
+    setCardBusy(true);
+    try {
+      const card = await composeShareCard(blob, booth, serial, dateText);
+      signal("story_card_shared");
+      const file = new File([card], `story-${serial}.jpg`, {
+        type: "image/jpeg",
+      });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] }).catch(() => {});
+      } else {
+        saveBlob(card, `story-${serial}.jpg`);
+      }
+    } catch {
+      // card composition failed; the plain strip share still works
+    } finally {
+      setCardBusy(false);
+    }
+  }
+
+  function printInterest() {
+    if (!printNoted) signal("print_interest");
+    setPrintNoted(true);
   }
 
   return (
@@ -106,8 +143,19 @@ export default function Admitted({
         <PlateButton onClick={canShare ? share : download}>
           {canShare ? "Share the strip" : "Download the strip"}
         </PlateButton>
-        <div className="mt-4 flex items-center justify-center gap-6">
+        <div className="mt-4 flex items-center justify-center gap-5">
           {canShare && <TypeLink onClick={download}>DOWNLOAD</TypeLink>}
+          <TypeLink onClick={shareStoryCard} disabled={cardBusy}>
+            {cardBusy ? "PRINTING CARD…" : "STORY CARD 9:16"}
+          </TypeLink>
+          <TypeLink onClick={printInterest}>ORDER PRINTS</TypeLink>
+        </div>
+        {printNoted && (
+          <p className="mt-3 text-center font-geo text-[10px] tracking-[0.16em] text-gold">
+            THE PRINT DESK OPENS SOON — YOUR INTEREST IS NOTED.
+          </p>
+        )}
+        <div className="mt-4 flex items-center justify-center gap-6">
           <TypeLink onClick={onPassport}>MY PASSPORT →</TypeLink>
           <TypeLink onClick={onDirectory}>THE BOOTHS</TypeLink>
         </div>

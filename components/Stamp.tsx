@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo } from "react";
-import type { Booth, BoothId } from "@/lib/types";
+import type { Booth, GlyphId } from "@/lib/types";
 import { buildBoothStampSvg, buildEntryStampSvg } from "@/lib/stamp";
 
 export function SealStamp({
@@ -14,7 +14,7 @@ export function SealStamp({
 }: {
   top: string;
   bottom: string;
-  glyph: BoothId;
+  glyph: GlyphId;
   color: string;
   className?: string;
   style?: React.CSSProperties;
@@ -48,7 +48,7 @@ export function BoothStamp({
     <SealStamp
       top={booth.name.toUpperCase()}
       bottom={booth.stampLocale}
-      glyph={booth.id}
+      glyph={booth.glyph}
       color={color ?? booth.accent}
       className={className}
       style={style}

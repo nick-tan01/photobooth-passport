@@ -1,4 +1,4 @@
-import type { BoothId } from "./types";
+import type { GlyphId } from "./types";
 
 export const DISPLAY = '"Playfair Display", Georgia, serif';
 export const GEO = 'Jost, "Avenir Next", Futura, sans-serif';
@@ -6,36 +6,54 @@ export const GEO = 'Jost, "Avenir Next", Futura, sans-serif';
 export interface StampSpec {
   top: string;
   bottom: string;
-  glyph: BoothId;
+  glyph: GlyphId;
   color: string;
 }
 
 // Stroke glyphs centred on (0,0), extent roughly ±18, drawn inside the
 // stamp's inner circle. Shared by the SVG builder and the canvas renderer.
-const GLYPHS: Record<BoothId, { d: string; w: number }[]> = {
-  standard: [
+const GLYPHS: Record<GlyphId, { d: string; w: number }[]> = {
+  camera: [
     { d: "M -16 -5 H 16 V 13 H -16 Z", w: 2.4 },
     { d: "M 0 4 m 8.5 0 a 8.5 8.5 0 1 1 -17 0 a 8.5 8.5 0 1 1 17 0", w: 2.4 },
     { d: "M 0 4 m 3.5 0 a 3.5 3.5 0 1 1 -7 0 a 3.5 3.5 0 1 1 7 0", w: 1.8 },
     { d: "M -7 -11 H 7 V -5", w: 2.2 },
   ],
-  midnight: [
+  moon: [
     { d: "M 4 -13.5 A 13.5 13.5 0 1 0 4 13.5 A 10.5 10.5 0 1 1 4 -13.5 Z", w: 2.4 },
     { d: "M 13 -10 v 7 M 9.5 -6.5 h 7", w: 2 },
   ],
-  seaside: [
+  waves: [
     { d: "M -10 -1 A 10 10 0 0 1 10 -1", w: 2.4 },
     { d: "M 0 -16 v 4 M -12 -11.5 l 3 3 M 12 -11.5 l -3 3", w: 2.2 },
     { d: "M -17 6 q 4.2 -6 8.5 0 t 8.5 0 t 8.5 0", w: 2.2 },
     { d: "M -17 13 q 4.2 -6 8.5 0 t 8.5 0 t 8.5 0", w: 2.2 },
   ],
-  niagara: [
+  falls: [
     { d: "M -14 -7 A 14 8 0 0 1 14 -7", w: 2.4 },
     {
       d: "M -14 -7 q -1.2 10 -1.2 15 M -7 -10 q -0.3 9 -0.3 16 M 0 -11 V 6 M 7 -10 q 0.3 9 0.3 16 M 14 -7 q 1.2 10 1.2 15",
       w: 2,
     },
     { d: "M -9 12 h 3.4 M -1 14 h 3.4 M 7 12 h 3.4", w: 2 },
+  ],
+  fleur: [
+    { d: "M 0 -15 q 5.5 7.5 0 16 q -5.5 -8.5 0 -16 Z", w: 2.2 },
+    { d: "M -12 -7 q 8 0.5 12 8.5", w: 2.2 },
+    { d: "M 12 -7 q -8 0.5 -12 8.5", w: 2.2 },
+    { d: "M -7 5.5 H 7 M 0 5.5 V 13", w: 2.2 },
+  ],
+  bunting: [
+    { d: "M -16 -9 q 16 9 32 0", w: 2.2 },
+    {
+      d: "M -12 -5.8 L -8.5 0.8 L -5 -4.8 M -3.8 -4.4 L -0.4 1.8 L 3 -4.2 M 4.6 -4.6 L 8 1 L 11.6 -5.4",
+      w: 2,
+    },
+    { d: "M 0 11 m 4 0 a 4 4 0 1 1 -8 0 a 4 4 0 1 1 8 0", w: 2 },
+  ],
+  snow: [
+    { d: "M 0 -15 V 15 M -13 -7.5 L 13 7.5 M -13 7.5 L 13 -7.5", w: 2 },
+    { d: "M -4 -10 L 0 -6 L 4 -10 M -4 10 L 0 6 L 4 10", w: 1.8 },
   ],
 };
 

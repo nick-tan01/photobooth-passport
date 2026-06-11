@@ -1,7 +1,18 @@
-export type BoothId = "standard" | "midnight" | "seaside" | "niagara";
+export type GlyphId =
+  | "camera"
+  | "moon"
+  | "waves"
+  | "falls"
+  | "fleur"
+  | "bunting"
+  | "snow";
+
+export type BoothKind = "place" | "seasonal" | "charter";
 
 export interface Booth {
-  id: BoothId;
+  id: string;
+  kind: BoothKind;
+  glyph: GlyphId;
   name: string;
   locale: string;
   stampLocale: string;
@@ -11,15 +22,28 @@ export interface Booth {
   prefix: string;
   accent: string;
   paper: string;
-  // position on the Route Map, in map SVG viewBox coordinates (390 x 300)
-  map: { x: number; y: number };
-  exclusive?: { place: string; note: string };
+  // position on the Route Map, in map SVG viewBox coordinates (390 x 300);
+  // only kind "place" booths appear on the map
+  map?: { x: number; y: number };
+  // seasonal booths only issue during these months (0-11)
+  season?: { months: number[]; returns: string };
+  exclusive?: {
+    place: string;
+    note: string;
+    // when present, the Sitting Card verifies presence by geolocation
+    geo?: { lat: number; lng: number; radiusKm: number };
+  };
   prompts: string[];
+}
+
+// a private event booth, unlocked by booking reference
+export interface Charter extends Booth {
+  code: string;
 }
 
 export interface StripRecord {
   id: string;
-  boothId: BoothId;
+  boothId: string;
   image: Blob;
   caption: string;
   dateText: string;

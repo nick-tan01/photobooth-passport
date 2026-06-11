@@ -120,6 +120,26 @@ export function playMotor(durMs: number) {
   src.stop(t + dur);
 }
 
+// A page being turned: short band-passed swish.
+export function playPage() {
+  const a = ac();
+  if (!a) return;
+  const t = a.currentTime;
+  const src = a.createBufferSource();
+  src.buffer = noise(a, 0.12);
+  const band = a.createBiquadFilter();
+  band.type = "bandpass";
+  band.frequency.setValueAtTime(700, t);
+  band.frequency.exponentialRampToValueAtTime(1600, t + 0.1);
+  band.Q.value = 0.9;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(0.22, t + 0.03);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+  src.connect(band).connect(g).connect(a.destination);
+  src.start(t);
+}
+
 export function buzz(ms = 30) {
   if (typeof navigator !== "undefined") navigator.vibrate?.(ms);
 }

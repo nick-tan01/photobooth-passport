@@ -6,6 +6,7 @@ import type { FinishId } from "@/lib/filters";
 import { compositeStrip, ensureFonts } from "@/lib/composite";
 import { nextSerial, saveStrip } from "@/lib/storage";
 import { isMuted, setMuted } from "@/lib/audio";
+import { signal } from "@/lib/signals";
 import Cover from "@/components/Cover";
 import BoothDirectory from "@/components/BoothDirectory";
 import SessionIntro from "@/components/SessionIntro";
@@ -103,12 +104,14 @@ export default function Home() {
   function beginSitting() {
     setPhotos([]);
     setStripUrl(null);
+    signal("sitting_started");
     setView("capture");
   }
 
   function onCaptured(shots: string[]) {
     setPhotos(shots);
     setStripUrl(null);
+    signal("sitting_completed");
     setView("reveal");
     if (booth) recompose(caption, dateText, shots, booth, serial, finish);
   }
@@ -136,6 +139,7 @@ export default function Home() {
     } catch {
       // storage may be unavailable (private browsing); still show the stamp
     }
+    signal("strip_affixed");
     setView("admitted");
   }
 

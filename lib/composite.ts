@@ -228,7 +228,7 @@ export async function compositeStrip(input: StripInput): Promise<Blob> {
       color: booth.accent,
       top: booth.name.toUpperCase(),
       bottom: booth.stampLocale,
-      glyph: booth.id,
+      glyph: booth.glyph,
     },
     W - M - 64,
     fy + 86,

@@ -1,8 +1,11 @@
-import type { Booth, BoothId } from "./types";
+import type { Booth } from "./types";
+import { CHARTERS } from "./charters";
 
 export const BOOTHS: Booth[] = [
   {
     id: "standard",
+    kind: "place",
+    glyph: "camera",
     name: "The Standard",
     locale: "HEAD OFFICE, TORONTO",
     stampLocale: "HEAD OFFICE",
@@ -26,6 +29,8 @@ export const BOOTHS: Booth[] = [
   },
   {
     id: "midnight",
+    kind: "place",
+    glyph: "moon",
     name: "Midnight Express",
     locale: "SLEEPER CAR No. 9",
     stampLocale: "SLEEPER CAR No. 9",
@@ -49,6 +54,8 @@ export const BOOTHS: Booth[] = [
   },
   {
     id: "seaside",
+    kind: "place",
+    glyph: "waves",
     name: "Seaside Pier",
     locale: "PIER PAVILION, SANTA MONICA",
     stampLocale: "PIER PAVILION",
@@ -71,7 +78,34 @@ export const BOOTHS: Booth[] = [
     ],
   },
   {
+    id: "montreal",
+    kind: "place",
+    glyph: "fleur",
+    name: "Vieux-Montréal",
+    locale: "GARE WINDSOR, MONTRÉAL",
+    stampLocale: "MONTRÉAL, QUÉ.",
+    motto: "BONJOUR-HI",
+    tagline: "Cobblestones, cathedral light, and a second language.",
+    place: "Montréal, Québec",
+    prefix: "MTL",
+    accent: "#5A3F6E",
+    paper: "#F6F1E6",
+    map: { x: 266, y: 100 },
+    prompts: [
+      "SAY BONJOUR-HI",
+      "INVISIBLE CROISSANT, BIG BITE",
+      "WINTER COAT SHRUG",
+      "GARGOYLE FACE",
+      "LOOK UP AT THE SPIRES",
+      "TOURIST WITH A MAP",
+      "JAZZ HANDS, OBVIOUSLY",
+      "POUTINE DAYDREAM",
+    ],
+  },
+  {
     id: "niagara",
+    kind: "place",
+    glyph: "falls",
     name: "Niagara Falls",
     locale: "TABLE ROCK, ONTARIO",
     stampLocale: "NIAGARA FALLS, ONT.",
@@ -83,8 +117,9 @@ export const BOOTHS: Booth[] = [
     paper: "#F4F1E6",
     map: { x: 281, y: 157 },
     exclusive: {
-      place: "NIAGARA FALLS, ON",
-      note: "Presence simulated for this demonstration.",
+      place: "TABLE ROCK, NIAGARA FALLS",
+      note: "Presence verified by location — or simulated for demonstration.",
+      geo: { lat: 43.079, lng: -79.0788, radiusKm: 2.5 },
     },
     prompts: [
       "HOLD ONTO YOUR HAT",
@@ -97,8 +132,70 @@ export const BOOTHS: Booth[] = [
       "SHOUT OVER THE ROAR",
     ],
   },
+  {
+    id: "midsummer",
+    kind: "seasonal",
+    glyph: "bunting",
+    name: "Midsummer Lawn",
+    locale: "THE COMPANY GARDENS",
+    stampLocale: "COMPANY GARDENS",
+    motto: "DUSK AT NINE",
+    tagline: "Set out on the lawn for the long evenings. June to August.",
+    place: "Wherever summer finds you",
+    prefix: "MSR",
+    accent: "#6B7C3F",
+    paper: "#F8F4E2",
+    season: { months: [5, 6, 7], returns: "RETURNS IN JUNE" },
+    prompts: [
+      "GOLDEN HOUR SQUINT",
+      "CHEERS WITH LEMONADE",
+      "CAUGHT A FIREFLY",
+      "LAWN CHAIR LEAN",
+      "TIP YOUR SUNHAT",
+      "BAREFOOT ON GRASS",
+      "WATCH THE LONG DUSK",
+      "PICNIC THIEF",
+    ],
+  },
+  {
+    id: "firstsnow",
+    kind: "seasonal",
+    glyph: "snow",
+    name: "First Snow",
+    locale: "THE WINTER PLATFORM",
+    stampLocale: "WINTER PLATFORM",
+    motto: "BUNDLE UP",
+    tagline: "Wheeled out when the first flakes hold. December to February.",
+    place: "Wherever winter finds you",
+    prefix: "SNO",
+    accent: "#3E5E78",
+    paper: "#F4F2EA",
+    season: { months: [11, 0, 1], returns: "RETURNS IN DECEMBER" },
+    prompts: [
+      "CATCH A SNOWFLAKE",
+      "MITTENS UP",
+      "SHIVER, DRAMATICALLY",
+      "SNOWBALL WIND-UP",
+      "FOG THE GLASS",
+      "HOT CHOCOLATE HANDS",
+      "FRESH POWDER GRIN",
+      "SCARF OVER NOSE",
+    ],
+  },
 ];
 
-export function getBooth(id: BoothId): Booth {
-  return BOOTHS.find((b) => b.id === id) ?? BOOTHS[0];
+export const PLACES = BOOTHS.filter((b) => b.kind === "place");
+export const SEASONALS = BOOTHS.filter((b) => b.kind === "seasonal");
+
+export function isInSeason(booth: Booth, date = new Date()): boolean {
+  if (!booth.season) return true;
+  return booth.season.months.includes(date.getMonth());
+}
+
+export function getBooth(id: string): Booth {
+  return (
+    BOOTHS.find((b) => b.id === id) ??
+    CHARTERS.find((b) => b.id === id) ??
+    BOOTHS[0]
+  );
 }

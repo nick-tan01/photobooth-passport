@@ -4,8 +4,9 @@
 
 import { useEffect, useState } from "react";
 import type { StripRecord } from "@/lib/types";
-import { BOOTHS, getBooth } from "@/lib/booths";
+import { PLACES, getBooth } from "@/lib/booths";
 import { listStrips, deleteStrip } from "@/lib/storage";
+import { playPage } from "@/lib/audio";
 import { BoothStamp, EntryStamp } from "./Stamp";
 import { PlateButton, TypeLink } from "./Controls";
 import { PhotoCorners } from "./CustomizeStrip";
@@ -26,6 +27,24 @@ export default function Passport({
   const [items, setItems] = useState<Item[] | null>(null);
   const [page, setPage] = useState(0);
   const [voiding, setVoiding] = useState(false);
+  const [holder, setHolder] = useState("");
+
+  useEffect(() => {
+    try {
+      setHolder(localStorage.getItem("pp-holder") || "");
+    } catch {
+      // fine — passport simply stays unregistered
+    }
+  }, []);
+
+  function saveHolder(v: string) {
+    setHolder(v);
+    try {
+      localStorage.setItem("pp-holder", v);
+    } catch {
+      // best effort
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -76,9 +95,18 @@ export default function Passport({
             <p className="font-geo text-[10px] tracking-[0.26em] text-faded">
               RECORDS OF MEMORY
             </p>
+            <input
+              value={holder}
+              onChange={(e) => saveHolder(e.target.value)}
+              placeholder="HOLDER — TYPE YOUR NAME"
+              maxLength={22}
+              aria-label="Passport holder name"
+              className="typed-field font-geo mt-2 w-[200px] uppercase tracking-[0.12em]"
+              style={{ fontSize: "12px" }}
+            />
           </div>
           <div className="mb-1 flex items-center gap-2">
-            {BOOTHS.map((b) =>
+            {PLACES.map((b) =>
               collected.has(b.id) ? (
                 <BoothStamp key={b.id} booth={b} className="w-10" />
               ) : (
@@ -125,7 +153,7 @@ export default function Passport({
           )}
 
           {current && (
-            <div key={current.rec.id} className="screen-in">
+            <div key={current.rec.id} className="page-turn">
               <div className="relative mx-auto w-fit rotate-[-0.7deg]">
                 <img
                   src={current.url}
@@ -183,6 +211,7 @@ export default function Passport({
             disabled={page === 0}
             onClick={() => {
               setVoiding(false);
+              playPage();
               setPage((p) => Math.max(0, p - 1));
             }}
           >
@@ -195,6 +224,7 @@ export default function Passport({
             disabled={page >= items.length - 1}
             onClick={() => {
               setVoiding(false);
+              playPage();
               setPage((p) => Math.min(items.length - 1, p + 1));
             }}
           >

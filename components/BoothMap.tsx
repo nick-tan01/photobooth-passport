@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import type { Booth, StripRecord } from "@/lib/types";
-import { BOOTHS } from "@/lib/booths";
+import { PLACES } from "@/lib/booths";
 import { listStrips } from "@/lib/storage";
 import { BoothStamp } from "./Stamp";
 import { TypeLink } from "./Controls";
@@ -30,6 +30,7 @@ const ROUTES = [
   "M 182 92 Q 158 128 148 168",
   "M 236 112 Q 262 130 281 157",
   "M 148 168 Q 218 188 281 157",
+  "M 236 112 Q 252 102 266 100",
 ];
 
 export default function BoothMap({
@@ -74,7 +75,9 @@ export default function BoothMap({
     };
   }, []);
 
-  const visitedCount = visits ? Object.keys(visits).length : 0;
+  const visitedCount = visits
+    ? PLACES.filter((p) => visits[p.id]).length
+    : 0;
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-cream px-5 pb-8 pt-7">
@@ -163,7 +166,7 @@ export default function BoothMap({
           </text>
         </svg>
 
-        {BOOTHS.map((b) => {
+        {PLACES.map((b) => {
           const v = visits?.[b.id];
           return (
             <button
@@ -171,8 +174,8 @@ export default function BoothMap({
               onClick={() => setSelected(b)}
               className="press absolute -translate-x-1/2 -translate-y-1/2"
               style={{
-                left: `${(b.map.x / VB_W) * 100}%`,
-                top: `${(b.map.y / VB_H) * 100}%`,
+                left: `${((b.map?.x ?? 0) / VB_W) * 100}%`,
+                top: `${((b.map?.y ?? 0) / VB_H) * 100}%`,
               }}
               aria-label={`${b.name} — ${v ? "visited" : "not yet collected"}`}
             >
@@ -206,7 +209,7 @@ export default function BoothMap({
       </div>
 
       <p className="relative z-10 mt-2 text-center font-geo text-[9.5px] tracking-[0.25em] text-faded">
-        PORTS OF CALL · {visitedCount} OF {BOOTHS.length} VISITED
+        PORTS OF CALL · {visitedCount} OF {PLACES.length} VISITED
       </p>
       {!selected && (
         <p className="relative z-10 mt-1 text-center font-geo text-[8.5px] tracking-[0.2em] text-faded/80">

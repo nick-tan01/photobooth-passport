@@ -1,9 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { Booth } from "@/lib/types";
+import { haversineKm, presenceVerified, markPresenceVerified } from "@/lib/geo";
+import { signal } from "@/lib/signals";
 import { BoothStamp } from "./Stamp";
 import { FormCheck, PlateButton, TypeLink } from "./Controls";
 import PaperTexture from "./PaperTexture";
+
+type Presence = "required" | "checking" | "granted" | "far" | "refused";
 
 interface Props {
   booth: Booth;
@@ -34,6 +39,45 @@ export default function SessionIntro({
   onBegin,
   onBack,
 }: Props) {
+  const geo = booth.exclusive?.geo;
+  const [presence, setPresence] = useState<Presence>(
+    geo ? "required" : "granted",
+  );
+  const [distKm, setDistKm] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (geo && presenceVerified(booth.id)) setPresence("granted");
+  }, [booth.id, geo]);
+
+  function verifyPresence() {
+    if (!geo) return;
+    if (!navigator.geolocation) {
+      setPresence("refused");
+      return;
+    }
+    setPresence("checking");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const d = haversineKm(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          geo.lat,
+          geo.lng,
+        );
+        setDistKm(d);
+        if (d <= geo.radiusKm) {
+          markPresenceVerified(booth.id);
+          signal("presence_verified");
+          setPresence("granted");
+        } else {
+          setPresence("far");
+        }
+      },
+      () => setPresence("refused"),
+      { timeout: 9000, maximumAge: 60000 },
+    );
+  }
+
   return (
     <div className="relative min-h-dvh bg-cream px-5 pb-10 pt-7">
       <div className="relative z-10">
@@ -114,12 +158,50 @@ export default function SessionIntro({
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto mt-6 max-w-[330px]">
-        <PlateButton onClick={onBegin}>Begin the sitting</PlateButton>
-        <p className="mt-3 text-center font-geo text-[10.5px] tracking-[0.22em] text-faded">
-          THE COUNTDOWN BEGINS AT ONCE
-        </p>
-      </div>
+      {presence === "granted" ? (
+        <div className="relative z-10 mx-auto mt-6 max-w-[330px]">
+          <PlateButton onClick={onBegin}>Begin the sitting</PlateButton>
+          <p className="mt-3 text-center font-geo text-[10.5px] tracking-[0.22em] text-faded">
+            THE COUNTDOWN BEGINS AT ONCE
+          </p>
+        </div>
+      ) : (
+        <div className="relative z-10 mx-auto mt-6 max-w-[330px] border-2 border-navy bg-paper px-4 py-4 shadow-strip">
+          <p className="font-geo text-[10px] font-semibold tracking-[0.24em] text-gold">
+            PRESENCE CHECK
+          </p>
+          <p className="mt-2 font-geo text-[12.5px] leading-snug text-ink">
+            This booth issues only at {booth.exclusive?.place}.
+          </p>
+          {presence === "far" && distKm !== null && (
+            <p className="mt-2 font-geo text-[11px] text-signal">
+              You appear to be {Math.round(distKm)} km from the falls.
+            </p>
+          )}
+          {presence === "refused" && (
+            <p className="mt-2 font-geo text-[11px] text-signal">
+              The atlas was refused — allow location access and try again.
+            </p>
+          )}
+          <div className="mt-4">
+            <PlateButton
+              onClick={verifyPresence}
+              disabled={presence === "checking"}
+            >
+              {presence === "checking" ? "Consulting the atlas…" : "Verify presence"}
+            </PlateButton>
+            <div className="mt-3 text-center">
+              <TypeLink
+                onClick={() => {
+                  setPresence("granted");
+                }}
+              >
+                SIMULATE ARRIVAL — DEMONSTRATION ONLY
+              </TypeLink>
+            </div>
+          </div>
+        </div>
+      )}
 
       <PaperTexture />
     </div>
