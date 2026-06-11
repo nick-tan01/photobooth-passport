@@ -1,5 +1,3 @@
-import { applyFinish, type FinishId } from "./filters";
-
 export async function startCamera(): Promise<MediaStream> {
   if (!navigator.mediaDevices?.getUserMedia) throw new Error("no-camera");
   return navigator.mediaDevices.getUserMedia({
@@ -17,13 +15,9 @@ export function stopStream(stream: MediaStream | null) {
 }
 
 // Centre-cropped square capture, mirrored to match the on-screen preview.
-// The chosen print finish is baked in here so thumbnails, the strip, and
-// the live (CSS-approximated) viewfinder all agree.
-export function captureFrame(
-  video: HTMLVideoElement,
-  finish: FinishId = "gloss",
-  size = 760,
-): string {
+// Exposures stay raw; the print finish is applied at composite time so it
+// can be chosen (and re-chosen) after the sitting, lab-style.
+export function captureFrame(video: HTMLVideoElement, size = 760): string {
   const vw = video.videoWidth || 720;
   const vh = video.videoHeight || 720;
   const side = Math.min(vw, vh);
@@ -33,12 +27,9 @@ export function captureFrame(
   c.width = size;
   c.height = size;
   const ctx = c.getContext("2d")!;
-  ctx.save();
   ctx.translate(size, 0);
   ctx.scale(-1, 1);
   ctx.drawImage(video, sx, sy, side, side, 0, 0, size, size);
-  ctx.restore();
-  applyFinish(ctx, size, size, finish);
   return c.toDataURL("image/jpeg", 0.92);
 }
 
@@ -47,7 +38,6 @@ export function captureFrame(
 export function captureTestFrame(
   index: number,
   accent: string,
-  finish: FinishId = "gloss",
   size = 760,
 ): string {
   const c = document.createElement("canvas");
@@ -115,6 +105,5 @@ export function captureTestFrame(
   ctx.fillText("THE GRAND TOUR CO. — TEST PATTERN", cx, size * 0.1);
   ctx.fillText(`EXPOSURE No. ${index + 1} OF 4 · NO CAMERA PRESENT`, cx, size * 0.91);
 
-  applyFinish(ctx, size, size, finish);
   return c.toDataURL("image/jpeg", 0.9);
 }

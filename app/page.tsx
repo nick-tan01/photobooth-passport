@@ -60,7 +60,14 @@ export default function Home() {
   );
 
   const recompose = useCallback(
-    async (cap: string, date: string, ph: string[], b: Booth, ser: string) => {
+    async (
+      cap: string,
+      date: string,
+      ph: string[],
+      b: Booth,
+      ser: string,
+      fin: FinishId,
+    ) => {
       const seq = ++compositeSeq.current;
       try {
         const blob = await compositeStrip({
@@ -69,6 +76,7 @@ export default function Home() {
           caption: cap,
           dateText: date,
           serial: ser,
+          finish: fin,
         });
         if (seq !== compositeSeq.current) return;
         stripBlob.current = blob;
@@ -102,7 +110,7 @@ export default function Home() {
     setPhotos(shots);
     setStripUrl(null);
     setView("reveal");
-    if (booth) recompose(caption, dateText, shots, booth, serial);
+    if (booth) recompose(caption, dateText, shots, booth, serial, finish);
   }
 
   function amend() {
@@ -158,8 +166,6 @@ export default function Home() {
             setWantPrompts={setWantPrompts}
             soundOn={soundOn}
             setSoundOn={setSound}
-            finish={finish}
-            setFinish={setFinish}
             onBegin={beginSitting}
             onBack={() => setView("directory")}
           />
@@ -170,7 +176,6 @@ export default function Home() {
             booth={booth}
             wantPrompts={wantPrompts}
             amendment={retakeUsed}
-            finish={finish}
             onComplete={onCaptured}
             onAbort={() => setView("intro")}
           />
@@ -190,9 +195,14 @@ export default function Home() {
             stripUrl={stripUrl}
             caption={caption}
             dateText={dateText}
+            finish={finish}
             onCaption={setCaption}
             onDate={setDateText}
-            recompose={(c, d) => recompose(c, d, photos, booth, serial)}
+            onFinish={(f) => {
+              setFinish(f);
+              recompose(caption, dateText, photos, booth, serial, f);
+            }}
+            recompose={(c, d) => recompose(c, d, photos, booth, serial, finish)}
             onAffix={affix}
           />
         )}

@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useRef } from "react";
+import { FINISHES, type FinishId } from "@/lib/filters";
 import { PlateButton } from "./Controls";
 import PaperTexture from "./PaperTexture";
 
@@ -10,8 +11,10 @@ interface Props {
   stripUrl: string | null;
   caption: string;
   dateText: string;
+  finish: FinishId;
   onCaption: (v: string) => void;
   onDate: (v: string) => void;
+  onFinish: (f: FinishId) => void;
   recompose: (caption: string, dateText: string) => void;
   onAffix: () => void;
 }
@@ -49,8 +52,10 @@ export default function CustomizeStrip({
   stripUrl,
   caption,
   dateText,
+  finish,
   onCaption,
   onDate,
+  onFinish,
   recompose,
   onAffix,
 }: Props) {
@@ -88,7 +93,49 @@ export default function CustomizeStrip({
         <PhotoCorners />
       </div>
 
-      <div className="relative z-10 mx-auto mt-6 w-full max-w-[320px] space-y-5">
+      <div className="relative z-10 mx-auto mt-5 w-full max-w-[330px]">
+        <p className="text-center font-geo text-[10px] tracking-[0.24em] text-faded">
+          FINISH — THE STRIP REPRINTS AS YOU CHOOSE
+        </p>
+        <div
+          className="mt-2 flex justify-center gap-2"
+          role="radiogroup"
+          aria-label="Print finish"
+        >
+          {FINISHES.map((f) => {
+            const active = finish === f.id;
+            return (
+              <button
+                key={f.id}
+                onClick={() => onFinish(f.id)}
+                role="radio"
+                aria-checked={active}
+                title={f.blurb}
+                className={`press flex w-[76px] flex-col items-center gap-1 px-1 py-2 ${
+                  active
+                    ? "border-[1.5px] border-navy bg-navy/[0.06]"
+                    : "border border-ink/30"
+                }`}
+              >
+                <span
+                  aria-hidden
+                  className="h-[22px] w-[22px] rounded-full border border-ink/25"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 35% 30%, #E8C49A 0%, #C98E6B 38%, #8A5E48 62%, #1F3A5F 100%)",
+                    filter: f.css,
+                  }}
+                />
+                <span className="font-geo text-[9px] font-semibold tracking-[0.12em] text-ink">
+                  {f.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="relative z-10 mx-auto mt-5 w-full max-w-[320px] space-y-5">
         <label className="block">
           <span className="font-geo text-[10px] tracking-[0.24em] text-faded">
             CAPTION — OPTIONAL

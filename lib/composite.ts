@@ -1,4 +1,5 @@
 import type { Booth } from "./types";
+import { applyFinish, type FinishId } from "./filters";
 import { drawBoothStamp, DISPLAY, GEO } from "./stamp";
 
 const W = 720;
@@ -17,6 +18,7 @@ export interface StripInput {
   caption: string;
   dateText: string;
   serial: string;
+  finish: FinishId;
 }
 
 export async function ensureFonts() {
@@ -130,7 +132,7 @@ function paperNoise(
 
 export async function compositeStrip(input: StripInput): Promise<Blob> {
   await ensureFonts();
-  const { photos, booth, caption, dateText, serial } = input;
+  const { photos, booth, caption, dateText, serial, finish } = input;
   const c = document.createElement("canvas");
   c.width = W;
   c.height = H;
@@ -155,8 +157,19 @@ export async function compositeStrip(input: StripInput): Promise<Blob> {
   rule(ctx, M, 92, W - M, "#C9A86A", 2.5);
   rule(ctx, M, 97, W - M, "rgba(31,58,95,0.35)", 1);
 
-  // photos with slight misalignment, warm tone, vignette
+  // photos with slight misalignment, vignette, and the chosen finish —
+  // applied here (not at capture) so the finish can be re-chosen after
+  // the sitting and previewed on the actual strip
   const imgs = await Promise.all(photos.map(loadImage));
+  const toned = imgs.map((img) => {
+    const t = document.createElement("canvas");
+    t.width = img.naturalWidth || 760;
+    t.height = img.naturalHeight || 760;
+    const tctx = t.getContext("2d")!;
+    tctx.drawImage(img, 0, 0);
+    applyFinish(tctx, t.width, t.height, finish);
+    return t;
+  });
   for (let i = 0; i < 4; i++) {
     const y = HEADER + i * (PHOTO + GAP);
     const rot = (rand() - 0.5) * 0.014;
@@ -166,9 +179,7 @@ export async function compositeStrip(input: StripInput): Promise<Blob> {
     ctx.translate(W / 2 + dx, y + PHOTO / 2 + dy);
     ctx.rotate(rot);
     const half = PHOTO / 2;
-    if (imgs[i]) ctx.drawImage(imgs[i], -half, -half, PHOTO, PHOTO);
-    // photo toning now lives in the capture-time finish (lib/filters.ts);
-    // the compositor only adds print character: vignette + frame
+    if (toned[i]) ctx.drawImage(toned[i], -half, -half, PHOTO, PHOTO);
     const g = ctx.createRadialGradient(0, 0, PHOTO * 0.32, 0, 0, PHOTO * 0.74);
     g.addColorStop(0, "rgba(34,38,43,0)");
     g.addColorStop(1, "rgba(34,38,43,0.20)");
