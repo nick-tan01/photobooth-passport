@@ -92,6 +92,7 @@ export default function BoothDirectory({
   const [charters, setCharters] = useState<Charter[]>([]);
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState(false);
+  const [presenting, setPresenting] = useState(false);
 
   useEffect(() => {
     listStrips()
@@ -100,16 +101,21 @@ export default function BoothDirectory({
     setCharters(unlockedCharters());
   }, []);
 
-  function tryUnlock() {
-    if (!code.trim()) return;
-    const charter = unlockCharter(code);
-    if (charter) {
-      setCharters(unlockedCharters());
-      setCode("");
-      setCodeError(false);
-      signal("charter_unlocked");
-    } else {
-      setCodeError(true);
+  async function tryUnlock() {
+    if (!code.trim() || presenting) return;
+    setPresenting(true);
+    try {
+      const charter = await unlockCharter(code);
+      if (charter) {
+        setCharters(unlockedCharters());
+        setCode("");
+        setCodeError(false);
+        signal("charter_unlocked");
+      } else {
+        setCodeError(true);
+      }
+    } finally {
+      setPresenting(false);
     }
   }
 
@@ -186,9 +192,10 @@ export default function BoothDirectory({
             />
             <button
               onClick={tryUnlock}
-              className="press border border-navy-deep bg-navy px-3 py-[7px] font-geo text-[10.5px] tracking-[0.18em] text-paper"
+              disabled={presenting}
+              className="press border border-navy-deep bg-navy px-3 py-[7px] font-geo text-[10.5px] tracking-[0.18em] text-paper disabled:opacity-40"
             >
-              PRESENT
+              {presenting ? "PRESENTING…" : "PRESENT"}
             </button>
           </div>
           {codeError && (
