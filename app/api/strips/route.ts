@@ -139,7 +139,11 @@ export async function POST(req: Request) {
       .single();
 
     if (insertError) {
-      await supabase.storage.from("strips-public").remove([path]); // avoid an orphaned object
+      // The anon key has no DELETE policy on strips-public (see
+      // 0009_storage.sql), so this object is orphaned on insert failure —
+      // expected and harmless, same cost as the documented test JPEGs.
+      // Nothing ever reads a storage object without a corresponding strips
+      // row, so an orphan is inert, just unreclaimed bytes.
       if (insertError.code === "23505" && attempt < MAX_ATTEMPTS - 1) continue; // slug collision — retry
       return NextResponse.json({ error: "save failed" }, { status: 500 });
     }

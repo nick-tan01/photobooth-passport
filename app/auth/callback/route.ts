@@ -8,7 +8,17 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  // `next` is attacker-controlled (it's an echoed query param) — only
+  // accept a same-site relative path. A value like "@evil.com" would
+  // otherwise be concatenated straight into the Location header and
+  // resolve to `https://<site>@evil.com` (host as userinfo); "//evil.com"
+  // or "/\\evil.com" are protocol-relative/backslash tricks browsers also
+  // treat as a scheme change. Anything else falls back to "/".
+  const rawNext = searchParams.get("next") ?? "/";
+  const next =
+    rawNext.startsWith("/") && !rawNext.startsWith("//") && !rawNext.startsWith("/\\")
+      ? rawNext
+      : "/";
 
   if (code) {
     const supabase = getSupabaseServerClient();

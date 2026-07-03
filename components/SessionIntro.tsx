@@ -86,9 +86,14 @@ export default function SessionIntro({
   return (
     <div className="relative min-h-dvh bg-cream px-5 pb-10 pt-safe">
       {referred ? (
-        <p className="relative z-10 text-center font-geo text-[10px] tracking-[0.22em] text-gold">
-          ADMITTED ON THE RECOMMENDATION OF A FELLOW TRAVELLER
-        </p>
+        <div className="relative z-10 text-center">
+          <p className="font-geo text-[10px] tracking-[0.22em] text-gold">
+            ADMITTED ON THE RECOMMENDATION OF A FELLOW TRAVELLER
+          </p>
+          <div className="mt-2">
+            <TypeLink onClick={onBack}>SEE EVERY BOOTH →</TypeLink>
+          </div>
+        </div>
       ) : (
         <div className="relative z-10">
           <TypeLink onClick={onBack}>← DIRECTORY</TypeLink>

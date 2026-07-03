@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Booth } from "@/lib/types";
 import { playThunk, buzz } from "@/lib/audio";
 import { composeShareCard } from "@/lib/sharecard";
@@ -42,6 +42,12 @@ export default function Admitted({
   const [shareBusy, setShareBusy] = useState(false);
   const [copyBusy, setCopyBusy] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [linkFailedUrl, setLinkFailedUrl] = useState<string | null>(null);
+  const linkFailedRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (linkFailedUrl) linkFailedRef.current?.select();
+  }, [linkFailedUrl]);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -120,17 +126,24 @@ export default function Admitted({
         }
         try {
           await navigator.share(data);
-        } catch {
-          return; // user dismissed the sheet — no completion signal
+          signal("strip_shared");
+          if (target) {
+            signal("share_completed", {
+              share_slug: target.slug,
+              meta: { method: "web-share" },
+            });
+          }
+          return;
+        } catch (err) {
+          if (err instanceof Error && err.name === "AbortError") {
+            return; // user dismissed the sheet — no completion signal
+          }
+          // Any other rejection — e.g. iOS Safari's NotAllowedError when
+          // transient user activation expired while resolveShareTarget()
+          // was awaiting the upload — is NOT a dismissal. Fall through to
+          // the clipboard/download fallback chain below instead of
+          // no-op'ing the button.
         }
-        signal("strip_shared");
-        if (target) {
-          signal("share_completed", {
-            share_slug: target.slug,
-            meta: { method: "web-share" },
-          });
-        }
-        return;
       }
       if (target) {
         try {
@@ -157,12 +170,18 @@ export default function Admitted({
     const blob = getBlob();
     if (!blob || copyBusy) return;
     setCopyBusy(true);
+    setLinkFailedUrl(null);
     try {
       const target = await resolveShareTarget(blob);
       if (!target) return; // offline/env-less/upload failed — no link yet, no error UI
       try {
         await writeClipboard(target.url);
       } catch {
+        // Clipboard permission denied, or the 4s timeout tripped — the
+        // button must not visibly no-op. Surface the URL itself so the
+        // guest can select and copy it by hand instead of losing the share.
+        setLinkCopied(false);
+        setLinkFailedUrl(target.url);
         return;
       }
       setLinkCopied(true);
@@ -258,6 +277,21 @@ export default function Admitted({
           <p className="mt-2 text-center font-geo text-[10px] tracking-[0.16em] text-gold">
             LINK COPIED — PASTE IT ANYWHERE.
           </p>
+        )}
+        {linkFailedUrl && (
+          <div className="mt-2 text-center">
+            <p className="font-geo text-[10px] tracking-[0.16em] text-signal">
+              COULDN&apos;T COPY — SELECT THE LINK AND COPY IT BY HAND.
+            </p>
+            <input
+              ref={linkFailedRef}
+              type="text"
+              readOnly
+              value={linkFailedUrl}
+              onFocus={(e) => e.currentTarget.select()}
+              className="typed-field font-geo mt-2 w-full text-center tracking-wide"
+            />
+          </div>
         )}
         <div className="mt-5 flex items-center justify-center gap-5">
           <TypeLink onClick={download}>DOWNLOAD</TypeLink>

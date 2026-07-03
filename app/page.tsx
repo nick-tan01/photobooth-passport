@@ -7,7 +7,8 @@ import { compositeStrip, ensureFonts } from "@/lib/composite";
 import { nextSerial, saveStrip } from "@/lib/storage";
 import { isMuted, setMuted } from "@/lib/audio";
 import { signal } from "@/lib/signals";
-import { findBooth } from "@/lib/booths";
+import { findBooth, isInSeason } from "@/lib/booths";
+import { unlockedCharters } from "@/lib/charters";
 import { captureReferral, noteReferredActivation } from "@/lib/referral";
 import { watchReferredSignup } from "@/lib/auth";
 import Cover from "@/components/Cover";
@@ -62,13 +63,23 @@ export default function Home() {
     // /?booth=<id>&ref=<slug>. Capturing the referral and landing straight
     // in that booth's SessionIntro are independent of each other so a bad
     // ?booth= value degrades to the normal Cover instead of a dead end.
+    // The deep link only ever resolves to a booth that's actually
+    // available right now — in season, and (if it's a charter) already
+    // unlocked on this device — otherwise a stale/out-of-season/guessed
+    // link falls straight through to the normal Cover, same as the
+    // directory would refuse it.
     try {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get("ref");
       if (ref) captureReferral(ref, params);
       const boothId = params.get("booth");
-      const target = boothId ? findBooth(boothId) : null;
-      if (target) selectBooth(target, { referred: true });
+      const candidate = boothId ? findBooth(boothId) : null;
+      const isAvailable =
+        !!candidate &&
+        isInSeason(candidate) &&
+        (candidate.kind !== "charter" ||
+          unlockedCharters().some((c) => c.id === candidate.id));
+      if (candidate && isAvailable) selectBooth(candidate, { referred: !!ref });
     } catch {
       // malformed URL — fall through to the normal Cover
     }

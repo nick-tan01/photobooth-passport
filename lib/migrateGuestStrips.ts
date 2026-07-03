@@ -64,8 +64,14 @@ export async function migrateGuestStrips(): Promise<{
   }
 
   const done = migratedIds();
-  const pending = strips.filter((s) => !done.has(s.id));
-  const newlyMigrated: string[] = [];
+  // A strip that already has a cached shareSlug (lib/shareUpload.ts's
+  // upload-on-share-intent) is already a row in the cloud — re-uploading it
+  // here would mint a second row/object/slug for the same strip. Mark those
+  // migrated without re-uploading instead of skipping the check entirely,
+  // so the local ledger converges with reality even if it had drifted.
+  const alreadyShared = strips.filter((s) => !done.has(s.id) && s.shareSlug);
+  const pending = strips.filter((s) => !done.has(s.id) && !s.shareSlug);
+  const newlyMigrated: string[] = alreadyShared.map((s) => s.id);
 
   for (const rec of pending) {
     try {

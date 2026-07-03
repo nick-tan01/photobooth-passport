@@ -14,6 +14,7 @@
 // pre-existing image-only share/download path.
 import type { Booth } from "./types";
 import { getStrip, updateStripShare } from "./storage";
+import { rememberOwnSlug } from "./referral";
 
 export interface ShareTarget {
   slug: string;
@@ -43,6 +44,7 @@ async function uploadStrip(params: {
     if (!res.ok) return null;
     const data = (await res.json()) as { slug?: string; url?: string };
     if (!data.slug || !data.url) return null;
+    rememberOwnSlug(data.slug); // self-referral guard — see lib/referral.ts
     return { slug: data.slug, url: data.url };
   } catch {
     return null; // offline, CSP-blocked, env-less 503, etc. — all degrade the same way

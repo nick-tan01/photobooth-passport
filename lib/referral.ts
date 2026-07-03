@@ -19,6 +19,38 @@ const REF_KEY = "pp_ref"; // localStorage — persists for the referred visitor'
 const ARRIVAL_GUARD_KEY = "pp_ref_arrival_fired"; // sessionStorage — once per tab session
 const ACTIVATION_GUARD_KEY = "pp_ref_activation_fired"; // localStorage — once ever
 const SIGNUP_GUARD_KEY = "pp_ref_signup_fired"; // localStorage — once ever
+const OWN_SLUGS_KEY = "pp_own_slugs"; // localStorage — slugs this browser itself has uploaded
+const MAX_OWN_SLUGS = 50;
+
+// Self-referral guard: a sharer tapping their own /s/[slug] link (very
+// common right after sharing, to check it worked) should never count as an
+// inbound referral — it would inflate the K-factor numerator for life (see
+// noteReferredActivation). lib/shareUpload.ts calls this whenever an
+// upload returns a slug; captureReferral() below consults it before
+// persisting anything. Best-effort and capped/FIFO-trimmed so a heavy
+// sharer never grows this unboundedly; worst case on storage failure is a
+// self-tap is (rarely) counted as a referral, same as today.
+export function rememberOwnSlug(slug: string) {
+  try {
+    const raw = localStorage.getItem(OWN_SLUGS_KEY);
+    const list: string[] = raw ? JSON.parse(raw) : [];
+    if (!list.includes(slug)) list.push(slug);
+    while (list.length > MAX_OWN_SLUGS) list.shift();
+    localStorage.setItem(OWN_SLUGS_KEY, JSON.stringify(list));
+  } catch {
+    // best-effort
+  }
+}
+
+function isOwnSlug(slug: string): boolean {
+  try {
+    const raw = localStorage.getItem(OWN_SLUGS_KEY);
+    const list: string[] = raw ? JSON.parse(raw) : [];
+    return list.includes(slug);
+  } catch {
+    return false;
+  }
+}
 
 // UTM survival (LAUNCH_PLAN.md build plan §G) — same five keys the
 // /api/signal beacon whitelists server-side (app/api/signal/route.ts
@@ -73,6 +105,7 @@ export function getReferrer(): Referrer | null {
 // query string (optional) — any whitelisted utm_* params on it are captured
 // alongside the slug and carried through the rest of the referred chain.
 export function captureReferral(refSlug: string, searchParams?: URLSearchParams) {
+  if (isOwnSlug(refSlug)) return; // self-referral — don't persist pp_ref or fire referred_arrival
   const utm = searchParams ? extractUtm(searchParams) : undefined;
   try {
     localStorage.setItem(

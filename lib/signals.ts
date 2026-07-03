@@ -80,6 +80,13 @@ function randomId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
+// Module-level fallback when localStorage is unavailable (e.g. private
+// browsing) — generated at most once per page load, so a storage-blocked
+// visitor's whole session still shares one sid instead of minting a fresh
+// one on every signal() call (which would inflate the K-factor denominator
+// by counting one sitting as many "sessions").
+let fallbackSid: string | null = null;
+
 // Lazily creates and persists an anonymous per-browser session id (no PII —
 // just an opaque random token) so events can be grouped into sessions for
 // funnel/K-factor math. Falls back to an ephemeral id if localStorage is
@@ -92,7 +99,8 @@ function getOrCreateSessionId(): string {
     localStorage.setItem(SID_KEY, fresh);
     return fresh;
   } catch {
-    return randomId();
+    if (!fallbackSid) fallbackSid = randomId();
+    return fallbackSid;
   }
 }
 

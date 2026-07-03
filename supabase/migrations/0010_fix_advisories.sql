@@ -12,6 +12,17 @@
 --    project's storage schema), which keeps direct/public reads and any
 --    future authenticated download() call working while blocking
 --    enumeration of every strip ever uploaded.
+--
+--    Portability note: storage.allow_any_operation(...) is verified present
+--    on THIS live project (mjusetxhmxiccdlspsep) but is not part of the
+--    standard/documented storage schema across all Supabase versions.
+--    Replaying migrations 0001-0013 on a fresh project (per 0001's stated
+--    portability goal) may fail at this policy if the fresh project's
+--    storage schema lacks it — if so, drop back to the plain
+--    `bucket_id = 'strips-public'` predicate (using/with check (true) on
+--    the bucket_id column alone) as a fallback rewrite; that reintroduces
+--    listability but keeps object fetches working, and is what 0009
+--    originally shipped.
 drop policy if exists "public read of strips-public objects" on storage.objects;
 
 create policy "strips-public objects are fetchable by path, not listable"
