@@ -20,9 +20,32 @@ const ARRIVAL_GUARD_KEY = "pp_ref_arrival_fired"; // sessionStorage — once per
 const ACTIVATION_GUARD_KEY = "pp_ref_activation_fired"; // localStorage — once ever
 const SIGNUP_GUARD_KEY = "pp_ref_signup_fired"; // localStorage — once ever
 
+// UTM survival (LAUNCH_PLAN.md build plan §G) — same five keys the
+// /api/signal beacon whitelists server-side (app/api/signal/route.ts
+// UTM_KEYS), so a value that makes it into pp_ref is guaranteed to also
+// survive that endpoint's independent sanitization.
+const UTM_KEYS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+] as const;
+const MAX_UTM_LEN = 64;
+
+function extractUtm(params: URLSearchParams): Record<string, string> | undefined {
+  const out: Record<string, string> = {};
+  for (const key of UTM_KEYS) {
+    const value = params.get(key);
+    if (value) out[key] = value.slice(0, MAX_UTM_LEN);
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 export interface Referrer {
   slug: string;
   ts: number;
+  utm?: Record<string, string>;
 }
 
 export function getReferrer(): Referrer | null {
@@ -30,7 +53,14 @@ export function getReferrer(): Referrer | null {
     const raw = localStorage.getItem(REF_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<Referrer>;
-    return typeof parsed.slug === "string" ? { slug: parsed.slug, ts: parsed.ts ?? 0 } : null;
+    if (typeof parsed.slug !== "string") return null;
+    const referrer: Referrer = { slug: parsed.slug, ts: parsed.ts ?? 0 };
+    // Additive — older persisted pp_ref values (pre-UTM) simply have no
+    // `utm` field, and this reads back as undefined rather than throwing.
+    if (parsed.utm && typeof parsed.utm === "object" && !Array.isArray(parsed.utm)) {
+      referrer.utm = parsed.utm as Record<string, string>;
+    }
+    return referrer;
   } catch {
     return null;
   }
@@ -39,10 +69,16 @@ export function getReferrer(): Referrer | null {
 // Called once on app load when a `ref` query param is present. Persists the
 // referrer for this visitor's whole lifetime (survives reloads/new tabs) and
 // fires referred_arrival at most once per browser tab session — a refresh
-// on the same visit doesn't re-fire it.
-export function captureReferral(refSlug: string) {
+// on the same visit doesn't re-fire it. `searchParams` is the page's full
+// query string (optional) — any whitelisted utm_* params on it are captured
+// alongside the slug and carried through the rest of the referred chain.
+export function captureReferral(refSlug: string, searchParams?: URLSearchParams) {
+  const utm = searchParams ? extractUtm(searchParams) : undefined;
   try {
-    localStorage.setItem(REF_KEY, JSON.stringify({ slug: refSlug, ts: Date.now() }));
+    localStorage.setItem(
+      REF_KEY,
+      JSON.stringify({ slug: refSlug, ts: Date.now(), ...(utm ? { utm } : {}) }),
+    );
   } catch {
     // best-effort; attribution just won't survive a reload
   }
@@ -53,7 +89,7 @@ export function captureReferral(refSlug: string) {
     // sessionStorage unavailable — fall through and fire once best-effort
     // rather than never attributing the arrival at all
   }
-  signal("referred_arrival", { share_slug: refSlug });
+  signal("referred_arrival", { share_slug: refSlug, ...(utm ? { utm } : {}) });
 }
 
 // Called on the first strip_affixed of any session. Fires referred_activation
@@ -68,7 +104,7 @@ export function noteReferredActivation() {
   } catch {
     return; // can't guard reliably — skip rather than risk firing every affix
   }
-  signal("referred_activation", { share_slug: ref.slug });
+  signal("referred_activation", { share_slug: ref.slug, ...(ref.utm ? { utm: ref.utm } : {}) });
 }
 
 // Called from lib/auth.ts's sign-in success path. Fires referred_signup at
@@ -84,5 +120,5 @@ export function noteReferredSignup() {
   } catch {
     return;
   }
-  signal("referred_signup", { share_slug: ref.slug });
+  signal("referred_signup", { share_slug: ref.slug, ...(ref.utm ? { utm: ref.utm } : {}) });
 }

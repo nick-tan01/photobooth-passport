@@ -15,6 +15,13 @@ function supabaseOrigin() {
 const supaOrigin = supabaseOrigin();
 const supaWs = supaOrigin ? `wss://${new URL(supaOrigin).host}` : null;
 
+// Dev-only: Next's Fast Refresh / HMR runtime uses eval() for module
+// evaluation and opens a same-origin websocket for the HMR channel. Neither
+// is present in a production build, so these tokens are added ONLY when
+// NODE_ENV === "development" (config is evaluated once at server start, so
+// this is reliable) and never reach the production CSP.
+const isDev = process.env.NODE_ENV === "development";
+
 // Content-Security-Policy tuned to what this app actually loads:
 //   - Google Fonts stylesheet (fonts.googleapis.com) + font files (fonts.gstatic.com)
 //   - camera frames / composited strips as data: and blob: images
@@ -24,7 +31,7 @@ const supaWs = supaOrigin ? `wss://${new URL(supaOrigin).host}` : null;
 // 'unsafe-inline' is required for Next's hydration bootstrap and inline styles.
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   `img-src 'self' data: blob:${supaOrigin ? ` ${supaOrigin}` : ""}`,

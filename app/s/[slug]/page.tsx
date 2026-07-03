@@ -14,8 +14,38 @@ import PaperTexture from "@/components/PaperTexture";
 // opengraph-image.tsx route (item 2 of the same spec).
 export const dynamic = "force-dynamic";
 
+// UTM survival (LAUNCH_PLAN.md build plan §G) — the same five keys
+// app/api/signal/route.ts whitelists server-side, so any value that
+// reaches the CTA link is guaranteed to also survive that endpoint's
+// independent sanitization once it round-trips through referred_arrival.
+const UTM_PARAM_KEYS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+] as const;
+const MAX_UTM_LEN = 64;
+
+type SearchParams = { [key: string]: string | string[] | undefined };
+
 interface Props {
   params: { slug: string };
+  searchParams: SearchParams;
+}
+
+// Whitelists utm_* params off the share page's own query string and caps
+// each value's length — everything else is dropped rather than forwarded.
+function extractUtm(searchParams: SearchParams): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of UTM_PARAM_KEYS) {
+    const raw = searchParams[key];
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    if (typeof value === "string" && value.length > 0) {
+      out[key] = value.slice(0, MAX_UTM_LEN);
+    }
+  }
+  return out;
 }
 
 async function getStrip(slug: string) {
@@ -55,7 +85,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function SharePage({ params }: Props) {
+export default async function SharePage({ params, searchParams }: Props) {
   const strip = await getStrip(params.slug);
   if (!strip) notFound();
 
@@ -63,6 +93,16 @@ export default async function SharePage({ params }: Props) {
   const tagline = strip.caption
     ? `‘${strip.caption}’`
     : "Four exposures. One strip. Stamped for keeps.";
+
+  // CTA deep-link: booth + ref are the existing referral pair (see
+  // lib/referral.ts); any whitelisted utm_* params on this page's own URL
+  // (e.g. a TikTok bio link with ?utm_source=tiktok&utm_campaign=...) ride
+  // along so app/page.tsx's arrival capture can persist and attribute them.
+  const ctaParams = new URLSearchParams({ booth: booth.id, ref: params.slug });
+  for (const [key, value] of Object.entries(extractUtm(searchParams))) {
+    ctaParams.set(key, value);
+  }
+  const ctaHref = `/?${ctaParams.toString()}`;
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-app flex-col bg-cream px-5 pb-10 pt-safe-lg">
@@ -101,7 +141,7 @@ export default async function SharePage({ params }: Props) {
 
       <div className="relative z-10 mx-auto mt-9 w-full max-w-[330px]">
         <a
-          href={`/?booth=${booth.id}&ref=${params.slug}`}
+          href={ctaHref}
           className="press block w-full border border-navy-deep bg-navy px-6 py-4 text-center font-display text-[15px] font-bold uppercase tracking-[0.18em] text-paper shadow-plate"
         >
           Make your own at {booth.name} →

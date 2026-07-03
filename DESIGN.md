@@ -274,3 +274,24 @@ The only change for a referred visit: the `← DIRECTORY` row at the top of `Ses
 **`ADMITTED ON THE RECOMMENDATION OF A FELLOW TRAVELLER`** — font-geo 10px, tracking 0.22em, `text-gold` (gold, not the usual `text-faded`, to read as a small warm welcome rather than a plain label), centered, not a tappable link.
 
 Everything else on `SessionIntro` — the sitting card, terms of carriage, prompts/sound checkboxes, `Begin the sitting` CTA — is unchanged. The share page's CTA (`Make your own at {booth.name} →`) deep-links straight into this booth's `SessionIntro` with the booth pre-selected, skipping `BoothDirectory` entirely — directory selection is the only step actually removed for a referred visitor.
+
+---
+
+### `/admin` — Bureau Ledger (internal) — Phase 4 spec
+
+**Concept.** Internal only, but still the Bureau's own room — a manifest office, not a SaaS dashboard. No signup-flow warmth here; this is read by one person, standing at the register, on a phone.
+
+**Pattern cited:** a shipping manifest / broadsheet stock-ticker board — dense, right-aligned `tabular-nums` rows under thin rules, one hero figure, zero chart chrome.
+
+**Key-gate (unauthenticated).** `cream` + `PaperTexture`, vertically centered, `max-w-app px-5`. One bordered panel (`border-2 border-gold/50`, px-6 py-8) holding: eyebrow `THE GRAND TOUR COMPANY · HEAD OFFICE` (font-geo 10px, tracking 0.26em, text-faded); H1 `PRESENT CREDENTIALS` (font-display bold uppercase, 20px, tracking 0.08em, text-ink); helper *"This ledger is restricted. State your key."* (font-geo 12px, text-ink-soft, sentence case, no italics — officialese, not warmth); a `.typed-field` input, `type=password`, placeholder `OFFICE KEY`, uppercase tracking-[0.18em] (identical token set to `BoothDirectory`'s booking-reference field); a button reusing `BoothDirectory`'s bordered navy chip verbatim, label `PRESENT` / `PRESENTING…`. On reject, signal-red line: `CREDENTIALS NOT RECOGNIZED — CHECK THE KEY.` (font-geo 10px, tracking 0.1em, text-signal — same construction as `NOT ON THE MANIFEST — CHECK THE REFERENCE.`). This is a counter action, not a `PlateButton` primary CTA.
+
+**Ledger (authenticated).** `cream` + `PaperTexture`, `max-w-app px-5 pt-safe-lg`, single column, mobile-first, no sidebar.
+
+1. Header: eyebrow `THE GRAND TOUR COMPANY · HEAD OFFICE`; H1 `BUREAU OF RECORDS` (font-display bold uppercase 22px tracking 0.05em text-ink); subline `INTERNAL LEDGER — NOT FOR DISTRIBUTION` (font-geo 10px tracking 0.22em text-signal).
+2. **K-factor hero**, `mt-6` — the North Star, shown once, large: a navy plate (`bg-navy border border-navy-deep shadow-plate`, px-6 py-8, centered, no `.press` — it isn't tappable). Eyebrow `K — FACTOR` (font-geo 10px tracking 0.28em text-gold); numeral `font-display font-bold text-paper text-[64px] leading-none tabular-nums` (e.g. `0.34`); formula subline `{referred admits} ÷ {sharers} = K · TRAILING 7 DAYS` (font-geo 10.5px tracking 0.1em text-gold/70 tabular-nums). No sharers yet: numeral reads `—`, subline `NO SHARES YET — THE FIGURE AWAITS.`
+3. **Daily funnel**, `mt-8` — `SectionLabel` `DAILY FUNNEL`. Ledger table, header row `DATE · SAT · STAMPED · SHARED · REFERRED` (font-geo 9px tracking 0.12em text-faded uppercase), each data row under a `border-t border-navy/20` rule, font-geo 12px text-ink `tabular-nums`, numeral columns right-aligned, `py-2`. No zebra striping, no color-coded deltas — a swing reads as a number, never a red/green cell. Empty: `NO CROSSINGS RECORDED — THE REGISTER IS EMPTY.`
+4. **Top referring slugs**, `mt-8` — `SectionLabel` `TOP REFERRING SLUGS · FIRST 10`. Columns `SLUG · VISITS · ADMITTED`, same rule/tabular-nums treatment; slug column left-aligned and untracked (letter-spacing reads as noise on a random base62 string). Empty: `NO REFERRALS ON FILE.`
+5. **UTM attribution**, `mt-8` — `SectionLabel` `UTM ATTRIBUTION`. Columns `SOURCE · MEDIUM · ADMITTED`, same treatment. Empty: `NO ORIGIN STAMPED.`
+6. Footer, `mt-8`: `ISSUED BY THE GRAND TOUR COMPANY · EST. 2026` — reuse `BoothDirectory`'s footer verbatim.
+
+**What NOT to do:** no charts/graph library (Recharts, Chart.js, sparklines) — the plate numeral and table cells carry every metric; no color-coded deltas or red/green cells; no sidebar nav, icon rail, or card-grid "admin dashboard" chrome; no rounded corners or drop-shadow tiles — the plate and the ledger tables are the only two containers on the page; no pagination controls — cap long tables at 10 rows and say so in the label instead. Data density over decoration; this is read on Nick's phone.

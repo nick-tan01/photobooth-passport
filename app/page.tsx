@@ -65,7 +65,7 @@ export default function Home() {
     try {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get("ref");
-      if (ref) captureReferral(ref);
+      if (ref) captureReferral(ref, params);
       const boothId = params.get("booth");
       const target = boothId ? findBooth(boothId) : null;
       if (target) selectBooth(target, { referred: true });
