@@ -6,6 +6,7 @@
 // to a harmless no-op/false when Supabase env vars are absent.
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { noteReferredSignup } from "@/lib/referral";
 import type { User } from "@supabase/supabase-js";
 
 export async function signInWithMagicLink(
@@ -41,4 +42,22 @@ export async function getUser(): Promise<User | null> {
   } catch {
     return null;
   }
+}
+
+// The sign-in success path: attaches a listener that fires
+// referred_signup (see lib/referral.ts) the moment a session actually
+// appears, whether from this tab's own sign-in or a magic-link redirect
+// completing in /auth/callback. Plumbing only — no auth UI calls this yet
+// (guest-first, see CLAUDE.md), so for every guest today this is a no-op
+// listener that never fires. Safe to call multiple times; returns an
+// unsubscribe function (a no-op when Supabase isn't configured).
+export function watchReferredSignup(): () => void {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) return () => {};
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((event) => {
+    if (event === "SIGNED_IN") noteReferredSignup();
+  });
+  return () => subscription.unsubscribe();
 }

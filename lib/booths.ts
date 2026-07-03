@@ -195,10 +195,14 @@ export function isInSeason(booth: Booth, date = new Date()): boolean {
   return booth.season.months.includes(date.getMonth());
 }
 
+// Strict lookup — null when the id isn't a known booth/charter, unlike
+// getBooth() below which always returns something displayable. Used where a
+// wrong/typo'd id must be ignored rather than silently redirected to a
+// fallback booth (e.g. the ?booth= deep-link param from a share page CTA).
+export function findBooth(id: string): Booth | null {
+  return BOOTHS.find((b) => b.id === id) ?? CHARTERS.find((b) => b.id === id) ?? null;
+}
+
 export function getBooth(id: string): Booth {
-  return (
-    BOOTHS.find((b) => b.id === id) ??
-    CHARTERS.find((b) => b.id === id) ??
-    BOOTHS[0]
-  );
+  return findBooth(id) ?? BOOTHS[0];
 }

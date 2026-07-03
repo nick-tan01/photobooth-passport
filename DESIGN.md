@@ -184,6 +184,93 @@ To keep new surfaces from drifting into generic AI-app look (per CLAUDE.md's "pr
 
 ## New-surface specs
 
-### `/s/[slug]` public share page — TODO
+### `/s/[slug]` public share page — Phase 2 spec
 
-This is the highest-leverage new surface in the launch plan (Phase 2: the public, server-rendered landing page a shared strip/story-card link points to, with Open Graph tags and a "Make your own" CTA). Full layout/token spec to be written here before implementation begins — do not build this screen from this stub.
+This is the highest-leverage new surface in the launch plan: the public, server-rendered landing page a shared strip/story-card link points to, with Open Graph tags and a dominant "Make your own" CTA. Items 1–2 below are the structural decisions locked in Phase 1 (Supabase schema + share-URL issuance) and remain the **canonical record** for `share_slug`/OG behavior — unchanged. Item 3 replaces the old Phase-1 "skeleton" placeholder with the full Phase 2 layout/token spec; `app/s/[slug]/page.tsx` (currently the minimal Phase-1 version) should be rebuilt to match it.
+
+**Pattern cited:** a BeReal/Lapse-style single-artifact result page — one large static image, one dominant CTA, no photo-viewer chrome (pinch-zoom, carousels, lightboxes) — crossed with this app's own Passport "page" framing, so a stranger's first view of the product reads as a leaf torn from someone's passport, not a marketing landing page.
+
+**1. URL structure.** `/s/[slug]` — confirmed. `slug` is a short URL-safe token: **8 characters, base62 (`[A-Za-z0-9]`)**, generated server-side and checked for uniqueness against `strips.share_slug`. No ambiguous-character filtering beyond standard base62 is needed at 8 chars (collision space is ~2.1×10^14; retry-on-conflict is sufficient) — but if a human-readable variant is ever wanted, prefer a filtered alphabet (drop `0/O`, `1/l/I`) rather than lengthening the slug. Short matters for two concrete reasons already in the launch plan: (a) the story card bakes a **QR code** into the 1080×1920 canvas (`lib/sharecard.ts`) — QR density/scannability at typical print or on-screen size degrades fast past ~15-20 characters of payload, and a full domain + long slug pushes the module count up and shrinks the effective quiet zone; (b) **iMessage/SMS link previews and inline text wrapping** favor short URLs — a bureau-styled "present this reference" link should read like a terse manifest number, not a UUID. Full path stays short: `photoboothpassport.com/s/aB3xQ9kZ` (~34 chars incl. domain).
+
+**2. OG-image requirements.** Each strip gets a server-generated `og:image` at **1200×630** (the standard link-unfurl size for iMessage/Twitter/Facebook/Slack). The strip itself is tall and narrow (`lib/composite.ts`: canvas is 720×2894, i.e. roughly **1:4** aspect — nowhere close to 1200×630's ~1.9:1 landscape ratio), so it must **never be stretched or cropped to fill the frame**. Treatment, following the precedent in `lib/sharecard.ts` (navy ground + double gold ceremonial border + cream/gold text + booth seal as the trust mark):
+   - Background: the strip's own `booth.paper` cream tone (or the app's `cream` #F2ECDD if simplest server-side) with the `paperNoise()` grain, **not** navy — navy is reserved for the story-card/cover "binding" surface; the OG image is closer to "a strip photographed on a desk," so paper reads right.
+   - The strip image is centered and **letterboxed** (scaled to fit height within a safe inset, e.g. ~560px tall within the 630px canvas, preserving its native 1:4 ratio), with a thin navy contact-stroke border (matching the strip's own 2px border) — not the strip's edges touching the frame.
+   - The booth's circular seal stamp (`drawBoothStamp`, `lib/stamp.ts`) placed bottom-right of the strip, same convention as the strip footer and the story card.
+   - No additional headline text baked into the image beyond what's already printed on the strip (booth name, serial, DATED line) — the image should read as "a photo of the actual artifact," not a marketing card with overlaid type. This also keeps the server-side render simple (compose once per strip, cache the PNG/JPEG in Storage next to the strip image).
+   - `twitter:card` = `summary_large_image` (pairs with the 1200×630 image).
+   - `og:title` / `og:description`: same officialese-meets-warmth voice as the rest of the app (see "Voice and world" above) — terse, treats the strip as a numbered record, never says "photo" or "post." Examples:
+     - `og:title`: `"Admitted at Pier Pavilion — No. 00482"` (pattern: `Admitted at {booth.name} — No. {serial}`)
+     - `og:description`: `"Four exposures. One strip. Stamped for keeps. Issued by The Grand Tour Company."` (reuse the existing tagline verbatim) or, if a caption exists: `"‘{caption}’ — stamped and filed at {booth.name}."`
+   - The OG image is generated **server-side per strip** (not client canvas) — either at share-time (write once, store in Supabase Storage alongside the strip image, URL saved on the `strips` row) or on-demand via a Next.js OG image route (`opengraph-image.tsx` / `@vercel/og`) cached at the edge. Either is acceptable in Phase 2; Phase 1 only needs the `strips` row to have a stable place to hold (or derive) that URL.
+
+**3. Full page layout (Phase 2 — supersedes the Phase-1 skeleton).**
+
+Background: `cream` (#F2ECDD) + the standard `PaperTexture` grain overlay (mounted once, final child, per existing convention) — never `navy`. Navy is reserved for the Cover/story-card "binding" surface; this page is "the artifact examined on a desk," matching the OG-image reasoning in §2 above.
+
+Layout, top to bottom, single column, `max-w-app` (430px), `px-5`, `pt-safe-lg`:
+
+1. Eyebrow, centered: `THE GRAND TOUR COMPANY` — font-geo 10px, tracking 0.26em, `text-faded`.
+2. H1, centered: **`ADMITTED — {BOOTH NAME}`** (e.g. `ADMITTED — PIER PAVILION`) — font-display bold uppercase, 22–24px depending on length, tracking 0.05em (looser tracking would clip on a 375px screen — the Cover's 0.16em is set for a two-line stack, not one line), `text-ink`; allow wrap to two lines rather than shrinking below 22px.
+3. Meta line, centered, `mt-1`: **`No. {serial} · DATED {date}`** — font-geo 11.5px, tracking 0.12em, `text-ink-soft`. (Same string format already used in the story card's caption block — reuse verbatim, don't invent a new date format.)
+4. Tagline, centered, `mt-2`: the strip's own caption in italic Playfair Display 15px `text-ink-soft`, quoted (`'{caption}'`), if one exists; otherwise the house tagline verbatim: *"Four exposures. One strip. Stamped for keeps."*
+5. The framed strip, `mt-7`, centered: reuse the exact Passport "page" motif — a recessed panel (`border border-ink/25 border-l-2 border-l-ink/40 bg-cream-deep/45`, dashed left rule), ~24px internal padding, strip inside at `height: min(58dvh, 520px)` with `shadow-strip` and the standard `PhotoCorners`. This is deliberately the largest strip presentation anywhere in the app (Admitted uses 42dvh, Passport 40dvh) — it is the entire point of the page. No tap-to-zoom, no lightbox: a single static image is the whole interaction, per the cited pattern.
+6. A faint booth-seal watermark inside the panel, bottom-right — reuse the exact `SessionIntro` convention verbatim (`pointer-events-none absolute bottom-2 right-2 w-[92px] rotate-[10deg] opacity-[0.13]`, `BoothStamp`). A trust mark, not a duplicate of the seal already baked into the strip's own footer.
+7. Primary CTA, `mt-9`, `max-w-[330px]` centered: `PlateButton`, unchanged token set (`bg-navy text-paper font-display font-bold tracking-[0.18em] text-[15px] py-4 shadow-plate`), label **`Make your own at {booth.name} →`**. Deep-links into that booth's `SessionIntro` with the booth pre-selected (see "Referred first-run" below).
+8. Reassurance line, `mt-3`, centered: font-geo 10.5px, tracking 0.22em, `text-faded` — **`NO SIGN-UP — THE CAMERA OPENS AT ONCE.`** (same slot/weight as `SessionIntro`'s `THE COUNTDOWN BEGINS AT ONCE`.)
+9. Secondary link, `mt-5`, centered: `TypeLink` — **`SEE EVERY BOOTH →`**, `href="/"`.
+
+**What NOT to do:** no navy background; no tap-to-zoom/pinch/lightbox; no second `PlateButton` or any element competing with the CTA; no login/signup prompt; no marketing copy beyond the one tagline line; no rounded corners or drop-shadow "card" around the page (the recessed dashed panel is the only framing device); don't render the booth seal large/dominant here — it already lives in the strip's own footer, so on this page it's a small watermark only.
+
+---
+
+### Story-card additions — QR + short-link
+
+`lib/sharecard.ts` composes the 1080×1920 card; this spec covers ONLY the addition of a QR code + short-link line to that existing composer. Everything else in the file (background, ceremonial border, header lockup, strip placement/rotation/shadow, photo corners, fonts) is unchanged.
+
+**Pattern cited:** an airline boarding-pass stub — a perforated tear-line separating a small barcode/QR "coupon" from the main pass — reused here as a "customs endorsement" band at the bottom of the card, so the QR reads as an official mark, not a slapped-on sticker.
+
+**Constraint:** the canvas must stay exactly 1080×1920 (9:16) — Instagram/Snapchat/TikTok Stories crop or letterbox anything off-ratio. Governing rule: keep every new element's bottom edge at or above **y=1650** (~270px clear of the canvas bottom), because Stories' native reply-bar/sticker-tray UI overlays roughly the bottom 250px of a posted Story — a QR sitting in that band would be intermittently obscured and effectively unscannable in-app.
+
+To open room inside the fixed 1920px height without crossing that ceiling, shrink `stripH` from `1280` to **`1000`** (stripW ≈249px at the strip's native 1:4.02 ratio — still by far the dominant vertical element) and shift the existing caption block up to close the gap:
+- Booth name (italic Playfair, 40px, was 44px): y=1380
+- Meta line (`No. {serial} · DATED {date}`, Jost 24px, was 26px): y=1420
+- Seal (`drawBoothStamp`): radius 78→56, center `(930, 1400)`
+
+New elements, all at or below y=1470:
+- **Perforation rule**, y=1470, x 140–940: a row of small filled circles, radius 3px, pitch 34px, `${GOLD}` at 45% alpha — the same punch-dot proportions as `.perf-y` (2.1px dot / 13px pitch) scaled ~2.6× for this canvas's resolution. Inset narrower than the card's own gold border (140px vs the border's 64px) so it reads as a ticket-stub width, not a full-bleed rule.
+- **QR chip**, x 140–292, y 1500–1652 (152×152px): a solid `CREAM` square with a 2px navy contact-stroke border (matching the strip's own border weight) — this is both the "official mark" backing and the QR's required light quiet zone. QR modules drawn **navy on cream** (never gold-on-navy) inside an 8px inset (136×136px module area) — dark-on-light is the scan-reliable polarity; low-contrast gold-on-navy risks failing to scan.
+- **Text block**, x 320–940, vertically centered against the chip (~y 1520–1632):
+  - `SCAN TO ENTER` — Jost 600 30px, gold, tracking 4px
+  - the live share URL, host stripped of protocol — `photoboothpassport.com/s/{slug}` — Jost 500 30px, cream, tracking 0.5px
+  - `PRESENT THIS CODE AT THE DOOR` — Jost 500 20px, gold at 70% alpha, tracking 2px
+
+**QR payload:** the strip's share URL with `?utm_source=qr` appended (`.../s/{slug}?utm_source=qr`) — the visible URL text omits the query string (a clean human-readable line); only the encoded payload carries it. (Encoding itself needs a small client-side QR-drawing dependency not yet in `package.json`, e.g. `qrcode` — an implementation detail for frontend-shareloop, not a design decision.)
+
+**What NOT to do:** don't draw the QR gold-on-navy (contrast/scan risk); don't let any new element's bottom edge cross y≈1650; don't grow the canvas past 1920 to make room; don't place bare QR modules directly on navy without the cream quiet-zone chip.
+
+---
+
+### Admitted screen — share dominance
+
+**Pattern cited:** a Lapse/Dispo-style result screen — Share is the one full-width primary action; Save is a small secondary text link, never a peer button.
+
+Smallest possible change: no new components, no new tokens — only relabel/reorder/re-space the existing `PlateButton`/`TypeLink` stack in `components/Admitted.tsx`.
+
+1. `PlateButton` (unchanged token set) — label is now **always** `Share the strip` (drop the `Download the strip` fallback label entirely). Share stays the stated action even where the native share sheet isn't available — the fallback becomes "copy the share-page link," not "download a file."
+2. `mt-2`, a single centered `TypeLink`: **`COPY LINK`** — copies the strip's `/s/[slug]` share-page URL to the clipboard. On tap, swap in a one-line gold confirmation using the existing `printNoted` convention (font-geo 10px, tracking 0.16em, `text-gold`): **`LINK COPIED — PASTE IT ANYWHERE.`** This sits tight beneath the `PlateButton` — "share via sheet" and "share via link" are siblings, not separate tiers — and is where the share-page URL copy affordance lives.
+3. `mt-5` (was `mt-4` — one notch more separation, marking the tier change below), the existing row of three `TypeLink`s, unchanged style, **`DOWNLOAD` always shown** (currently gated behind `!canShare`; ungate it — download is a demoted option now, not share's fallback): `DOWNLOAD` · `STORY CARD 9:16` · `ORDER PRINTS`.
+4. The existing `printNoted` line and the `MY PASSPORT →` / `THE BOOTHS` row: unchanged.
+
+**What NOT to do:** don't resize or reweight any `TypeLink` relative to another — hierarchy comes from tier (`PlateButton` vs `TypeLink`), order, and proximity only, never from new font sizes; don't add icons (share glyph, link glyph — none exist in this system); don't duplicate the `PlateButton` or add a second full-width button.
+
+---
+
+### Referred first-run (visitor arriving via a shared strip)
+
+**Decision: keep `SessionIntro`, don't skip it.** It carries real functional content — camera-use terms, the geo presence-check for exclusive booths, prompts/sound toggles — not tutorial fluff, and it's a single screen with one tap (`Begin the sitting`) before the camera opens, so it stays inside the <5s budget. No separate welcome modal, no tutorial overlay.
+
+The only change for a referred visit: the `← DIRECTORY` row at the top of `SessionIntro` (a referred visitor didn't come from the directory) is replaced with one centered line, same weight class as the row it replaces:
+
+**`ADMITTED ON THE RECOMMENDATION OF A FELLOW TRAVELLER`** — font-geo 10px, tracking 0.22em, `text-gold` (gold, not the usual `text-faded`, to read as a small warm welcome rather than a plain label), centered, not a tappable link.
+
+Everything else on `SessionIntro` — the sitting card, terms of carriage, prompts/sound checkboxes, `Begin the sitting` CTA — is unchanged. The share page's CTA (`Make your own at {booth.name} →`) deep-links straight into this booth's `SessionIntro` with the booth pre-selected, skipping `BoothDirectory` entirely — directory selection is the only step actually removed for a referred visitor.

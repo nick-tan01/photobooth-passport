@@ -5,30 +5,38 @@
 // PostHog — see app/api/signal/route.ts. No PII: the only identifier is an
 // anonymous, randomly-generated session id kept in localStorage.
 //
-// Funnel taxonomy (LAUNCH_PLAN.md §1 "K-factor engine" / §4 Phase 1 §E):
+// Funnel taxonomy (LAUNCH_PLAN.md §1 "K-factor engine" / §5 Phase 2 "share
+// loop"):
 //
 //   sitting_started      guest opens a booth and starts the 4-exposure sitting
 //   sitting_completed    all 4 exposures captured, strip composited
 //                        ("activated" for K-factor purposes — see
 //                        supabase/views/analytics.sql)
 //   strip_affixed        strip saved into the Passport (IndexedDB / cloud)
-//   strip_shared          \ guest shares the strip image or the 9:16 story
-//   story_card_shared     / card via the Web Share API — outbound half of
-//                          the loop
-//   referred_arrival     [Phase 2, not fired yet] a NEW visitor lands via a
-//                        shared link (/s/[slug]) carrying share_slug/utm —
+//   strip_shared          \ guest TAPS share on the strip image or the 9:16
+//   story_card_shared     / story card — outbound *intent*, fires whether
+//                          or not the share sheet is completed or dismissed
+//   share_completed       the share action actually COMPLETED (Web Share
+//                        promise resolved, a target was picked, or a link
+//                        was copied) — distinct from the strip_shared /
+//                        story_card_shared *intent* signals above. Carries
+//                        the share_slug being shared plus a `method` (e.g.
+//                        "web-share", "copy-link") in meta.
+//   referred_arrival     a NEW visitor lands via a shared link (/s/[slug])
+//                        carrying the referrer's share_slug + utm —
 //                        inbound half of the loop
-//   referred_signup      [Phase 2, not fired yet] that referred visitor
-//                        creates an account / activates
+//   referred_signup      that referred session creates an account
+//   referred_activation  that referred session affixes its OWN first strip
+//                        — the practical K-factor numerator until account
+//                        signup has UI (see supabase/views/analytics.sql)
 //
-// North Star: K-factor = referred_signup sessions / activated
-// (sitting_completed) sessions. Phase 1 only lays the plumbing (session id,
-// strip_id/share_slug/utm/meta fields, the events table + SQL views);
-// referred_arrival and referred_signup start firing once Phase 2 builds the
-// /s/[slug] attribution capture and the post-referral signup flow. Until
-// then those two names are documented here but intentionally NOT added to
-// SignalName below — no call site exists yet, and the existing signal names
-// stay as-is per the Phase 1 scope.
+// North Star: K-factor = referred signups / activated (sitting_completed)
+// sessions. Until account creation has a UI, referred_activation (first
+// strip_affixed by a referred session) is used as the practical numerator;
+// analytics_kfactor also reports a referred_signups variant for when
+// accounts land. These four names (referred_arrival, share_completed,
+// referred_signup, referred_activation) are wired here and in the SQL
+// views; the frontend-shareloop work fires the actual call sites.
 //
 // print_interest, charter_unlocked, presence_verified are secondary product
 // signals outside the acquisition funnel — kept for visibility, not used in
@@ -40,6 +48,10 @@ export type SignalName =
   | "strip_affixed"
   | "strip_shared"
   | "story_card_shared"
+  | "share_completed"
+  | "referred_arrival"
+  | "referred_signup"
+  | "referred_activation"
   | "print_interest"
   | "charter_unlocked"
   | "presence_verified";

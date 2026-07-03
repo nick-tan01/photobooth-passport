@@ -46,6 +46,24 @@ export async function deleteStrip(id: string): Promise<void> {
   await run("readwrite", (s) => s.delete(id));
 }
 
+export async function getStrip(id: string): Promise<StripRecord | undefined> {
+  return run<StripRecord | undefined>("readonly", (s) => s.get(id));
+}
+
+// Caches a strip's share slug/URL (from the first upload-on-share-intent,
+// see lib/shareUpload.ts) onto its existing IndexedDB record, so a later
+// share of the same strip reuses the slug instead of re-uploading. A no-op
+// if the record can't be found (e.g. storage was unavailable at affix time)
+// — the upload itself already succeeded, only the cache is skipped.
+export async function updateStripShare(
+  id: string,
+  share: { slug: string; url: string },
+): Promise<void> {
+  const rec = await getStrip(id);
+  if (!rec) return;
+  await saveStrip({ ...rec, shareSlug: share.slug, shareUrl: share.url });
+}
+
 export function nextSerial(prefix: string): string {
   const key = "pb-serial-counter";
   let n = 1;

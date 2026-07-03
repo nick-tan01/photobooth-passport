@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { Booth } from "@/lib/types";
 import { playThunk, buzz } from "@/lib/audio";
 import { composeShareCard } from "@/lib/sharecard";
+import { ensureShareTarget, type ShareTarget } from "@/lib/shareUpload";
 import { signal } from "@/lib/signals";
 import { EntryStamp } from "./Stamp";
 import { PlateButton, TypeLink } from "./Controls";
@@ -16,6 +17,8 @@ interface Props {
   booth: Booth;
   serial: string;
   dateText: string;
+  caption: string;
+  stripId: string;
   stripUrl: string | null;
   getBlob: () => Blob | null;
   onPassport: () => void;
@@ -26,18 +29,21 @@ export default function Admitted({
   booth,
   serial,
   dateText,
+  caption,
+  stripId,
   stripUrl,
   getBlob,
   onPassport,
   onDirectory,
 }: Props) {
   const [stamped, setStamped] = useState(false);
-  const [canShare, setCanShare] = useState(false);
   const [printNoted, setPrintNoted] = useState(false);
   const [cardBusy, setCardBusy] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [copyBusy, setCopyBusy] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
-    setCanShare(typeof navigator !== "undefined" && !!navigator.canShare);
     const t = setTimeout(() => {
       setStamped(true);
       playThunk(2);
@@ -45,6 +51,27 @@ export default function Admitted({
     }, 700);
     return () => clearTimeout(t);
   }, []);
+
+  // Some browsers leave a clipboard-write permission prompt indefinitely
+  // unresolved (neither granted nor denied) instead of rejecting — without
+  // a bound, that would hang the calling async function forever and leave
+  // its busy-guard stuck (permanently disabling the button). 4s is a plain
+  // clipboard write; anything slower is treated the same as a denial.
+  function writeClipboard(text: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("clipboard timeout")), 4000);
+      navigator.clipboard.writeText(text).then(
+        (v) => {
+          clearTimeout(timer);
+          resolve(v);
+        },
+        (e) => {
+          clearTimeout(timer);
+          reject(e);
+        },
+      );
+    });
+  }
 
   function saveBlob(blob: Blob, name: string) {
     const a = document.createElement("a");
@@ -62,22 +89,90 @@ export default function Admitted({
     saveBlob(blob, `photobooth-${serial}.jpg`);
   }
 
+  // Uploads the strip on the FIRST share intent (share sheet, story card,
+  // or copy-link — whichever happens first) and caches the resulting
+  // slug/URL on the IndexedDB record so every later share of this strip
+  // reuses it. Resolves to null (never throws) when offline, env-less, or
+  // the upload fails — callers fall back to an image-only share.
+  async function resolveShareTarget(blob: Blob): Promise<ShareTarget | null> {
+    return ensureShareTarget(stripId, blob, booth, serial, dateText, caption);
+  }
+
+  // Share stays the stated action even when the native share sheet can't
+  // carry files: the fallback is copying the share-page link, not silently
+  // downgrading to a file download (DESIGN.md "Admitted screen — share
+  // dominance"). A download only happens as the last resort, when there's
+  // no share URL at all (offline/env-less/upload failure).
   async function share() {
     const blob = getBlob();
-    if (!blob) return;
-    const file = new File([blob], `photobooth-${serial}.jpg`, {
-      type: "image/jpeg",
-    });
-    if (navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: "Photobooth Passport" });
+    if (!blob || shareBusy) return;
+    setShareBusy(true);
+    try {
+      const target = await resolveShareTarget(blob);
+      const file = new File([blob], `photobooth-${serial}.jpg`, {
+        type: "image/jpeg",
+      });
+      if (navigator.canShare?.({ files: [file] })) {
+        const data: ShareData = { title: "Photobooth Passport", files: [file] };
+        if (target) {
+          data.url = target.url;
+          data.text = `Admitted at ${booth.name} — No. ${serial}`;
+        }
+        try {
+          await navigator.share(data);
+        } catch {
+          return; // user dismissed the sheet — no completion signal
+        }
         signal("strip_shared");
+        if (target) {
+          signal("share_completed", {
+            share_slug: target.slug,
+            meta: { method: "web-share" },
+          });
+        }
         return;
-      } catch {
-        return; // user dismissed the sheet
       }
+      if (target) {
+        try {
+          await writeClipboard(target.url);
+          setLinkCopied(true);
+          signal("strip_shared");
+          signal("share_completed", {
+            share_slug: target.slug,
+            meta: { method: "copy-link" },
+          });
+          return;
+        } catch {
+          // clipboard permission denied (or never resolved) — fall through
+          // to a plain download
+        }
+      }
+      download();
+    } finally {
+      setShareBusy(false);
     }
-    download();
+  }
+
+  async function copyLink() {
+    const blob = getBlob();
+    if (!blob || copyBusy) return;
+    setCopyBusy(true);
+    try {
+      const target = await resolveShareTarget(blob);
+      if (!target) return; // offline/env-less/upload failed — no link yet, no error UI
+      try {
+        await writeClipboard(target.url);
+      } catch {
+        return;
+      }
+      setLinkCopied(true);
+      signal("share_completed", {
+        share_slug: target.slug,
+        meta: { method: "copy-link" },
+      });
+    } finally {
+      setCopyBusy(false);
+    }
   }
 
   async function shareStoryCard() {
@@ -85,13 +180,24 @@ export default function Admitted({
     if (!blob || cardBusy) return;
     setCardBusy(true);
     try {
-      const card = await composeShareCard(blob, booth, serial, dateText);
+      const target = await resolveShareTarget(blob);
+      const card = await composeShareCard(blob, booth, serial, dateText, target?.url ?? null);
       signal("story_card_shared");
       const file = new File([card], `story-${serial}.jpg`, {
         type: "image/jpeg",
       });
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] }).catch(() => {});
+        try {
+          await navigator.share({ files: [file] });
+          if (target) {
+            signal("share_completed", {
+              share_slug: target.slug,
+              meta: { method: "web-share" },
+            });
+          }
+        } catch {
+          // user dismissed the sheet
+        }
       } else {
         saveBlob(card, `story-${serial}.jpg`);
       }
@@ -140,11 +246,21 @@ export default function Admitted({
       </div>
 
       <div className="relative z-10 mx-auto mt-9 w-full max-w-[330px]">
-        <PlateButton onClick={canShare ? share : download}>
-          {canShare ? "Share the strip" : "Download the strip"}
+        <PlateButton onClick={share} disabled={shareBusy}>
+          Share the strip
         </PlateButton>
-        <div className="mt-4 flex items-center justify-center gap-5">
-          {canShare && <TypeLink onClick={download}>DOWNLOAD</TypeLink>}
+        <div className="mt-2 text-center">
+          <TypeLink onClick={copyLink} disabled={copyBusy}>
+            COPY LINK
+          </TypeLink>
+        </div>
+        {linkCopied && (
+          <p className="mt-2 text-center font-geo text-[10px] tracking-[0.16em] text-gold">
+            LINK COPIED — PASTE IT ANYWHERE.
+          </p>
+        )}
+        <div className="mt-5 flex items-center justify-center gap-5">
+          <TypeLink onClick={download}>DOWNLOAD</TypeLink>
           <TypeLink onClick={shareStoryCard} disabled={cardBusy}>
             {cardBusy ? "PRINTING CARD…" : "STORY CARD 9:16"}
           </TypeLink>

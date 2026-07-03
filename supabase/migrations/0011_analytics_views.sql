@@ -1,3 +1,9 @@
+-- Mirrors supabase/views/analytics.sql (Phase 2 share-loop funnel + K-factor
+-- views). Kept in sync by hand; this file is NOT applied automatically —
+-- the orchestrator applies it deliberately via the Supabase MCP
+-- apply_migration tool once ready. See supabase/views/analytics.sql for
+-- the full commentary on each view.
+
 -- Analytics views for the acquisition funnel + K-factor North Star metric.
 -- (LAUNCH_PLAN.md §1 "Definition of the first customer" / §5 Phase 2 "share
 -- loop".)
@@ -242,9 +248,11 @@ group by 1, 2, 3
 order by 1, 2, 3;
 
 -- 6. Lock the views down ----------------------------------------------------
--- (Mirrored in supabase/migrations/0011_analytics_views.sql.) Views execute
--- with the owner's privileges, and Supabase's default grants would expose
--- them to the anon/authenticated API roles. Analytics stay server-side.
+-- Views execute with the owner's privileges (no security_invoker here on
+-- purpose — they must aggregate over RLS-hidden events rows), and Supabase's
+-- default grants would expose them to the anon/authenticated API roles.
+-- Analytics stay server-side: only service_role / SQL editor / the future
+-- auth-gated admin surface may read them.
 revoke all on public.analytics_daily_funnel from anon, authenticated;
 revoke all on public.analytics_kfactor from anon, authenticated;
 revoke all on public.analytics_kfactor_daily from anon, authenticated;

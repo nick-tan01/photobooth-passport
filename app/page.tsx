@@ -7,6 +7,9 @@ import { compositeStrip, ensureFonts } from "@/lib/composite";
 import { nextSerial, saveStrip } from "@/lib/storage";
 import { isMuted, setMuted } from "@/lib/audio";
 import { signal } from "@/lib/signals";
+import { findBooth } from "@/lib/booths";
+import { captureReferral, noteReferredActivation } from "@/lib/referral";
+import { watchReferredSignup } from "@/lib/auth";
 import Cover from "@/components/Cover";
 import BoothDirectory from "@/components/BoothDirectory";
 import SessionIntro from "@/components/SessionIntro";
@@ -45,12 +48,33 @@ export default function Home() {
   const [caption, setCaption] = useState("");
   const [dateText, setDateText] = useState("");
   const [stripUrl, setStripUrl] = useState<string | null>(null);
+  const [stripId, setStripId] = useState("");
+  const [referredEntry, setReferredEntry] = useState(false);
   const stripBlob = useRef<Blob | null>(null);
   const compositeSeq = useRef(0);
 
   useEffect(() => {
     setSoundOn(!isMuted());
     ensureFonts();
+    const unwatch = watchReferredSignup();
+
+    // Referred first-run: a shared strip's /s/[slug] CTA deep-links to
+    // /?booth=<id>&ref=<slug>. Capturing the referral and landing straight
+    // in that booth's SessionIntro are independent of each other so a bad
+    // ?booth= value degrades to the normal Cover instead of a dead end.
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get("ref");
+      if (ref) captureReferral(ref);
+      const boothId = params.get("booth");
+      const target = boothId ? findBooth(boothId) : null;
+      if (target) selectBooth(target, { referred: true });
+    } catch {
+      // malformed URL — fall through to the normal Cover
+    }
+
+    return unwatch;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(
@@ -89,7 +113,7 @@ export default function Home() {
     [],
   );
 
-  function selectBooth(b: Booth) {
+  function selectBooth(b: Booth, opts?: { referred?: boolean }) {
     setBooth(b);
     setSerial(nextSerial(b.prefix));
     setRetakeUsed(false);
@@ -98,6 +122,7 @@ export default function Home() {
     setPhotos([]);
     stripBlob.current = null;
     setStripUrl(null);
+    setReferredEntry(!!opts?.referred);
     setView("intro");
   }
 
@@ -125,8 +150,9 @@ export default function Home() {
 
   async function affix() {
     if (!booth || !stripBlob.current) return;
+    const id = uuid();
     const rec: StripRecord = {
-      id: uuid(),
+      id,
       boothId: booth.id,
       image: stripBlob.current,
       caption,
@@ -139,7 +165,9 @@ export default function Home() {
     } catch {
       // storage may be unavailable (private browsing); still show the stamp
     }
+    setStripId(id);
     signal("strip_affixed");
+    noteReferredActivation();
     setView("admitted");
   }
 
@@ -179,6 +207,7 @@ export default function Home() {
             setSoundOn={setSound}
             onBegin={beginSitting}
             onBack={() => setView("directory")}
+            referred={referredEntry}
           />
         )}
 
@@ -223,6 +252,8 @@ export default function Home() {
             booth={booth}
             serial={serial}
             dateText={dateText}
+            caption={caption}
+            stripId={stripId}
             stripUrl={stripUrl}
             getBlob={() => stripBlob.current}
             onPassport={() => setView("passport")}

@@ -52,6 +52,12 @@ export interface StripRecord {
   dateText: string;
   serial: string;
   createdAt: number;
+  // Cached share-page slug/URL from the FIRST successful upload on share
+  // intent (see lib/shareUpload.ts). Optional so existing records written
+  // before this field existed keep loading unchanged; absent until the
+  // strip has actually been shared once.
+  shareSlug?: string;
+  shareUrl?: string;
 }
 
 export type View =

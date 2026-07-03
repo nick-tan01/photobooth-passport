@@ -20,6 +20,10 @@ interface Props {
   setSoundOn: (v: boolean) => void;
   onBegin: () => void;
   onBack: () => void;
+  // True only for the single SessionIntro reached straight from a shared
+  // strip's /s/[slug] CTA (see DESIGN.md "Referred first-run") — a normal
+  // directory-selected visit is always false.
+  referred?: boolean;
 }
 
 const CLAUSES = [
@@ -38,6 +42,7 @@ export default function SessionIntro({
   setSoundOn,
   onBegin,
   onBack,
+  referred,
 }: Props) {
   const geo = booth.exclusive?.geo;
   const [presence, setPresence] = useState<Presence>(
@@ -80,9 +85,15 @@ export default function SessionIntro({
 
   return (
     <div className="relative min-h-dvh bg-cream px-5 pb-10 pt-safe">
-      <div className="relative z-10">
-        <TypeLink onClick={onBack}>← DIRECTORY</TypeLink>
-      </div>
+      {referred ? (
+        <p className="relative z-10 text-center font-geo text-[10px] tracking-[0.22em] text-gold">
+          ADMITTED ON THE RECOMMENDATION OF A FELLOW TRAVELLER
+        </p>
+      ) : (
+        <div className="relative z-10">
+          <TypeLink onClick={onBack}>← DIRECTORY</TypeLink>
+        </div>
+      )}
 
       <div className="relative z-10 mt-4 border-2 border-ink bg-paper px-5 pb-6 pt-5 shadow-strip">
         <div className="flex items-baseline justify-between">
