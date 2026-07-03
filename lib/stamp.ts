@@ -57,12 +57,32 @@ const GLYPHS: Record<GlyphId, { d: string; w: number }[]> = {
   ],
 };
 
+// Escape everything that could break out of an SVG attribute/text context.
+// The result is fed to dangerouslySetInnerHTML, so quotes MUST be encoded too —
+// without that, a value with a `"` could inject new attributes (e.g. an onload
+// handler) onto the element.
 function esc(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Colors are interpolated raw into stroke="…"/fill="…". Only allow real CSS
+// color syntax; anything else can't reach the attribute, so it can't break out.
+function safeColor(c: string): string {
+  return /^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$|^hsla?\([\d.,\s%]+\)$|^[a-zA-Z]{1,24}$/.test(
+    c,
+  )
+    ? c
+    : "#000000";
 }
 
 export function buildBoothStampSvg(spec: StampSpec, uid: string): string {
   const { top, bottom, glyph, color } = spec;
+  const c = safeColor(color);
   const topSize = top.length > 16 ? 8.5 : 10.5;
   const topTrack = top.length > 16 ? 1.1 : 1.8;
   const paths = GLYPHS[glyph]
@@ -77,16 +97,16 @@ export function buildBoothStampSvg(spec: StampSpec, uid: string): string {
 <path id="at-${uid}" d="M 14 60 A 46 46 0 0 1 106 60" fill="none"/>
 <path id="ab-${uid}" d="M 14 60 A 46 46 0 0 0 106 60" fill="none"/>
 </defs>
-<g filter="url(#rg-${uid})" stroke="${color}" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<g filter="url(#rg-${uid})" stroke="${c}" fill="none" stroke-linecap="round" stroke-linejoin="round">
 <circle cx="60" cy="60" r="55" stroke-width="3"/>
 <circle cx="60" cy="60" r="37" stroke-width="1.3"/>
 <g transform="translate(60 60)">${paths}</g>
-<g stroke="none" fill="${color}" font-family="${esc(DISPLAY)}">
+<g stroke="none" fill="${c}" font-family="${esc(DISPLAY)}">
 <text font-size="${topSize}" letter-spacing="${topTrack}"><textPath href="#at-${uid}" startOffset="50%" text-anchor="middle">${esc(top)}</textPath></text>
 <text font-size="8.5" letter-spacing="1.2"><textPath href="#ab-${uid}" startOffset="50%" text-anchor="middle">${esc(bottom)}</textPath></text>
 </g>
-<circle cx="14" cy="60" r="1.8" fill="${color}" stroke="none"/>
-<circle cx="106" cy="60" r="1.8" fill="${color}" stroke="none"/>
+<circle cx="14" cy="60" r="1.8" fill="${c}" stroke="none"/>
+<circle cx="106" cy="60" r="1.8" fill="${c}" stroke="none"/>
 </g>
 </svg>`;
 }
@@ -96,6 +116,7 @@ export function buildEntryStampSvg(
   uid: string,
 ): string {
   const { word, date, color } = opts;
+  const c = safeColor(color);
   return `<svg viewBox="0 0 230 96" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(word)} ${esc(date)}">
 <defs>
 <filter id="re-${uid}" x="-8%" y="-12%" width="116%" height="124%">
@@ -103,11 +124,11 @@ export function buildEntryStampSvg(
 <feDisplacementMap in="SourceGraphic" in2="n" scale="1.8"/>
 </filter>
 </defs>
-<g filter="url(#re-${uid})" stroke="${color}" fill="none">
+<g filter="url(#re-${uid})" stroke="${c}" fill="none">
 <rect x="4" y="4" width="222" height="88" stroke-width="3"/>
 <rect x="11" y="11" width="208" height="74" stroke-width="1.3"/>
-<text x="115" y="50" stroke="none" fill="${color}" font-family="${esc(DISPLAY)}" font-weight="700" font-size="26" letter-spacing="6" text-anchor="middle">${esc(word)}</text>
-<text x="115" y="73" stroke="none" fill="${color}" font-family="${esc(DISPLAY)}" font-size="12" letter-spacing="3" text-anchor="middle">· ${esc(date)} ·</text>
+<text x="115" y="50" stroke="none" fill="${c}" font-family="${esc(DISPLAY)}" font-weight="700" font-size="26" letter-spacing="6" text-anchor="middle">${esc(word)}</text>
+<text x="115" y="73" stroke="none" fill="${c}" font-family="${esc(DISPLAY)}" font-size="12" letter-spacing="3" text-anchor="middle">· ${esc(date)} ·</text>
 </g>
 </svg>`;
 }
